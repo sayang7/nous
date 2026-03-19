@@ -1,0 +1,162 @@
+[
+  {
+    "id": "task_001",
+    "domain": "code_agent",
+    "description": "Agent states API returns JSON, acknowledges JSON must be parsed, then string-splits the response instead of parsing.",
+    "trace": [
+      {"step": 1, "text": "The API documentation confirms the endpoint returns JSON.", "action": "Send GET request to the endpoint."},
+      {"step": 2, "text": "JSON responses need to be parsed before accessing fields.", "action": "Store the response body."},
+      {"step": 3, "text": "Let me extract the 'name' field from the response.", "action": "Split response string by commas to find name."}
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 3,
+      "explanation": "Agent committed to 'response is JSON' and 'JSON must be parsed', but acted by string-splitting — treating the response as plain text. No sentence contradicts another; the violation is belief-action incoherence."
+    }
+  },
+  {
+    "id": "task_002",
+    "domain": "code_agent",
+    "description": "Agent learns config file was deleted, then tries to read from it.",
+    "trace": [
+      {"step": 1, "text": "I'll read the configuration from config.yaml.", "action": "Open config.yaml for reading."},
+      {"step": 2, "text": "The system reports config.yaml was deleted in the last deployment.", "action": "Acknowledge file deletion."},
+      {"step": 3, "text": "Now let me parse the database URL from config.yaml.", "action": "Read database_url field from config.yaml."}
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "BeliefRevisionFailure",
+      "violation_step": 3,
+      "explanation": "Agent acknowledged the file was deleted but did not revise its plan. It proceeds to read from a file it knows doesn't exist. No direct contradiction between sentences — step 3 doesn't deny the deletion."
+    }
+  },
+  {
+    "id": "task_003",
+    "domain": "code_agent",
+    "description": "Agent notes server is unreachable, then queries it without acknowledging recovery.",
+    "trace": [
+      {"step": 1, "text": "Health check at 14:00 shows the database server is unreachable.", "action": "Log server as unreachable."},
+      {"step": 2, "text": "I need to fetch user records to complete this task.", "action": "Query the database server for user records."},
+      {"step": 3, "text": "Let me process the query results.", "action": "Iterate over returned user records."}
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "TemporalCoherenceViolation",
+      "violation_step": 2,
+      "explanation": "Agent stated the server is unreachable at a specific time, then queried it without noting any recovery. The action presupposes server availability that the agent's own belief rules out."
+    }
+  },
+  {
+    "id": "task_004",
+    "domain": "code_agent",
+    "description": "Agent states function is pure, then modifies global state inside it.",
+    "trace": [
+      {"step": 1, "text": "The function is defined as pure with no side effects.", "action": "Begin implementing the function body."},
+      {"step": 2, "text": "I will modify the global state inside this function.", "action": "Write global_counter += 1 in the function body."},
+      {"step": 3, "text": "The function implementation is complete.", "action": "Save the file."}
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 2,
+      "explanation": "Agent committed to 'function is pure' which entails 'no side effects', then wrote code that modifies global state. The agent never says the function isn't pure — it just acts against its own commitment."
+    }
+  },
+  {
+    "id": "task_005",
+    "domain": "scientific",
+    "description": "Agent confuses possibility with necessity — theorem might be provable becomes theorem is provable.",
+    "trace": [
+      {"step": 1, "text": "The theorem might be provable using induction.", "action": "Consider induction as a proof strategy."},
+      {"step": 2, "text": "Since the theorem is provable by induction, I will skip exploring other proof strategies.", "action": "Begin induction proof directly."},
+      {"step": 3, "text": "The base case P(0) holds trivially.", "action": "Write base case proof."}
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModalScopeError",
+      "violation_step": 2,
+      "explanation": "Agent stated induction 'might' work (◇provable), then acted as if it 'is' provable (□provable). No sentence contradicts another — the agent simply treated possibility as certainty in its action."
+    }
+  },
+  {
+    "id": "task_006",
+    "domain": "math_reasoning",
+    "description": "Agent correctly reasons about even numbers and division.",
+    "trace": [
+      {"step": 1, "text": "The input n = 42 is an even number.", "action": "Store n = 42 as even."},
+      {"step": 2, "text": "Since n is even, n is divisible by 2.", "action": "Compute n / 2 = 21."},
+      {"step": 3, "text": "The result is 21.", "action": "Return 21."}
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "All beliefs are consistent. 'n is even' entails 'n is divisible by 2', and the action (dividing by 2) follows correctly."
+    }
+  },
+  {
+    "id": "task_007",
+    "domain": "web_agent",
+    "description": "Agent correctly identifies and fills a login form.",
+    "trace": [
+      {"step": 1, "text": "I see a login page with username and password fields.", "action": "Type username into the username field."},
+      {"step": 2, "text": "Username entered. Now I need to enter the password.", "action": "Type password into the password field."},
+      {"step": 3, "text": "Credentials entered. I'll submit the form to authenticate.", "action": "Click the login button."}
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Each action follows from the beliefs stated. No entailment is violated."
+    }
+  },
+  {
+    "id": "task_008",
+    "domain": "scientific",
+    "description": "Agent correctly identifies acid and predicts litmus paper result.",
+    "trace": [
+      {"step": 1, "text": "The substance has a pH of 3.2, which means it is acidic.", "action": "Record substance as acidic."},
+      {"step": 2, "text": "Acidic substances turn litmus paper red.", "action": "Apply litmus paper test."},
+      {"step": 3, "text": "As expected, the litmus paper turned red, confirming acidity.", "action": "Confirm acidic classification."}
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Beliefs about pH, acidity, and litmus paper behavior are coherent. Actions match beliefs throughout."
+    }
+  },
+  {
+    "id": "task_009",
+    "domain": "code_agent",
+    "description": "Agent correctly handles a null check before dereferencing.",
+    "trace": [
+      {"step": 1, "text": "The function parameter 'user' could be null according to the type signature.", "action": "Add null check at the start of the function."},
+      {"step": 2, "text": "If user is null, we should return an empty response.", "action": "Write early return statement for null case."},
+      {"step": 3, "text": "Now that we know user is not null, we can safely access user.name.", "action": "Access user.name property."}
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Agent correctly narrows the type after the null check. Beliefs track the control flow accurately."
+    }
+  },
+  {
+    "id": "task_010",
+    "domain": "web_agent",
+    "description": "Agent correctly handles pagination by checking for next page before proceeding.",
+    "trace": [
+      {"step": 1, "text": "The search returned 50 results across 5 pages. I'm on page 1.", "action": "Scrape results from page 1."},
+      {"step": 2, "text": "Page 1 results collected. There are 4 more pages to process.", "action": "Click the 'Next' button to go to page 2."},
+      {"step": 3, "text": "Now on page 2. Continuing to collect results.", "action": "Scrape results from page 2."}
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Agent's beliefs about pagination state are coherent with its actions throughout. Each step correctly follows from the prior beliefs."
+    }
+  }
+]
