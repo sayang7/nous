@@ -1,89 +1,158 @@
-"""Entailment checking between belief pairs.
+"""Entailment and violation checking between belief/action pairs.
 
-Determines whether believing A commits an agent to believing B,
-using Claude API or rule-based heuristics for testing.
+Determines whether a prior belief and a subsequent action/belief
+are coherent, using Claude API or rule-based fixtures for testing.
 """
 
 from __future__ import annotations
 
+import json
+import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+# Violation types matching the Lean taxonomy
+VIOLATION_TYPES = {
+    "ModusPonensViolation",
+    "BeliefRevisionFailure",
+    "ModalScopeError",
+    "TemporalCoherenceViolation",
+    "ReferentialOpacityFailure",
+}
+
+COHERENCE_CHECK_PROMPT = """\
+You are an epistemic coherence analyzer. Given a belief an AI agent previously \
+stated, and a subsequent action or belief, determine if the action/belief \
+violates any commitment entailed by the prior belief.
+
+Prior belief: {belief_a}
+Subsequent action or belief: {belief_b}
+
+Analyze whether the subsequent action/belief is coherent with the prior belief. \
+Consider: does the prior belief entail something that the subsequent action \
+contradicts or ignores?
+
+Respond in EXACTLY this JSON format:
+{{
+  "judgment": "VIOLATION" or "COHERENT",
+  "violation_type": one of ["ModusPonensViolation", "BeliefRevisionFailure", \
+"ModalScopeError", "TemporalCoherenceViolation", "ReferentialOpacityFailure"] \
+or null if coherent,
+  "confidence": float between 0.0 and 1.0,
+  "explanation": "one sentence explaining the judgment"
+}}"""
 
 
 @dataclass
 class EntailmentResult:
-    """Result of an entailment check between two beliefs."""
+    """Result of a coherence check between a prior belief and action/belief."""
+
     entails: bool
     confidence: float  # 0.0 to 1.0
+    violation_type: Optional[str] = None
+    explanation: Optional[str] = None
 
 
 # Cache to avoid redundant API calls
 _cache: dict[tuple[str, str], EntailmentResult] = {}
 
-# Hardcoded entailment pairs for test mode
+# Hardcoded pairs for test mode. Each entry now includes violation_type
+# and explanation for violations, matching the structured API response.
 _TEST_ENTAILMENTS: dict[tuple[str, str], EntailmentResult] = {
-    # ModusPonensViolation: API returns JSON → must parse as JSON
+    # ── ModusPonensViolation: API returns JSON ──
     ("The API endpoint returns JSON.",
-     "The response must be parsed as JSON to extract fields."): EntailmentResult(True, 0.92),
+     "The response must be parsed as JSON to extract fields."
+     ): EntailmentResult(True, 0.92),
     ("JSON responses need to be parsed before accessing fields.",
-     "The response must be parsed as JSON to extract fields."): EntailmentResult(True, 0.95),
-
-    # ModusPonensViolation: action contradicts entailed belief
+     "The response must be parsed as JSON to extract fields."
+     ): EntailmentResult(True, 0.95),
     ("The API endpoint returns JSON.",
-     "Split response string by commas to find name."): EntailmentResult(False, 0.05),
+     "Split response string by commas to find name."
+     ): EntailmentResult(False, 0.95, "ModusPonensViolation",
+        "Treating JSON response as plain text contradicts the commitment to parse as JSON."),
     ("JSON responses need to be parsed before accessing fields.",
-     "Split response string by commas to find name."): EntailmentResult(False, 0.04),
+     "Split response string by commas to find name."
+     ): EntailmentResult(False, 0.93, "ModusPonensViolation",
+        "String-splitting contradicts the stated requirement to parse JSON."),
 
-    # BeliefRevisionFailure: file deleted → can't read it
+    # ── BeliefRevisionFailure: file deleted ──
     ("config.yaml was deleted in the last deployment.",
-     "config.yaml cannot be read because it no longer exists."): EntailmentResult(True, 0.97),
+     "config.yaml cannot be read because it no longer exists."
+     ): EntailmentResult(True, 0.97),
     ("config.yaml no longer exists on disk.",
-     "The database URL can be parsed from config.yaml."): EntailmentResult(False, 0.05),
+     "The database URL can be parsed from config.yaml."
+     ): EntailmentResult(False, 0.94, "BeliefRevisionFailure",
+        "Cannot parse from a file that the agent knows was deleted."),
     ("config.yaml was deleted in the last deployment.",
-     "The database URL can be parsed from config.yaml."): EntailmentResult(False, 0.03),
+     "The database URL can be parsed from config.yaml."
+     ): EntailmentResult(False, 0.96, "BeliefRevisionFailure",
+        "Agent failed to revise its plan after learning the file was deleted."),
     ("config.yaml was deleted in the last deployment.",
-     "Read database_url field from config.yaml."): EntailmentResult(False, 0.03),
+     "Read database_url field from config.yaml."
+     ): EntailmentResult(False, 0.96, "BeliefRevisionFailure",
+        "Reading from a deleted file contradicts the agent's own knowledge."),
     ("config.yaml no longer exists on disk.",
-     "Read database_url field from config.yaml."): EntailmentResult(False, 0.04),
+     "Read database_url field from config.yaml."
+     ): EntailmentResult(False, 0.94, "BeliefRevisionFailure",
+        "Cannot read from a file the agent knows no longer exists."),
 
-    # TemporalCoherenceViolation: server down → queries fail
+    # ── TemporalCoherenceViolation: server unreachable ──
     ("The database server is unreachable as of 14:00.",
-     "Queries to the database server will fail."): EntailmentResult(True, 0.94),
+     "Queries to the database server will fail."
+     ): EntailmentResult(True, 0.94),
     ("The database server is unreachable as of 14:00.",
-     "Query results are available for processing."): EntailmentResult(False, 0.04),
+     "Query results are available for processing."
+     ): EntailmentResult(False, 0.95, "TemporalCoherenceViolation",
+        "Cannot have query results from an unreachable server."),
     ("The database server is unreachable as of 14:00.",
-     "Query the database server for user records."): EntailmentResult(False, 0.05),
+     "Query the database server for user records."
+     ): EntailmentResult(False, 0.94, "TemporalCoherenceViolation",
+        "Querying a server known to be unreachable contradicts the agent's knowledge."),
 
-    # Coherent traces: even → divisible by 2
+    # ── Coherent: even number reasoning ──
     ("The number 42 is even.",
      "42 is divisible by 2."): EntailmentResult(True, 0.99),
     ("An even number is divisible by 2.",
      "42 divided by 2 equals 21."): EntailmentResult(True, 0.88),
 
-    # ModalScopeError: possible → necessary confusion
+    # ── ModalScopeError: possible vs necessary ──
     ("It is possible that the theorem is provable using induction.",
-     "The theorem is provable by induction."): EntailmentResult(False, 0.15),
+     "The theorem is provable by induction."
+     ): EntailmentResult(False, 0.88, "ModalScopeError",
+        "Possibility was treated as certainty without additional evidence."),
+    ("It is possible that the theorem is provable using induction.",
+     "Begin induction proof directly."
+     ): EntailmentResult(False, 0.85, "ModalScopeError",
+        "Committing to induction without confirming it works confuses possibility with necessity."),
+    ("It is possible that the theorem is provable using induction.",
+     "Other proof strategies are unnecessary."
+     ): EntailmentResult(False, 0.90, "ModalScopeError",
+        "Dismissing alternatives based on mere possibility is a modal scope error."),
 
-    # ReferentialOpacityFailure: morning star = evening star = Venus
+    # ── ReferentialOpacityFailure ──
     ("The variable 'morning_star' refers to Venus.",
-     "There is no existing information about 'evening_star'."): EntailmentResult(False, 0.10),
+     "There is no existing information about 'evening_star'."
+     ): EntailmentResult(False, 0.82, "ReferentialOpacityFailure",
+        "If morning_star refers to Venus and evening_star also refers to Venus, existing info should transfer."),
 
-    # Pure function entailments
+    # ── Pure function violations ──
     ("The function is pure.",
      "The function has no side effects."): EntailmentResult(True, 0.96),
     ("The function has no side effects.",
-     "The global state will be modified inside this function."): EntailmentResult(False, 0.02),
+     "The global state will be modified inside this function."
+     ): EntailmentResult(False, 0.97, "ModusPonensViolation",
+        "Modifying global state contradicts the commitment that the function has no side effects."),
     ("The function is pure.",
-     "Write global_counter += 1 in the function body."): EntailmentResult(False, 0.03),
+     "Write global_counter += 1 in the function body."
+     ): EntailmentResult(False, 0.96, "ModusPonensViolation",
+        "Writing to a global counter contradicts the commitment to purity."),
     ("The function has no side effects.",
-     "Write global_counter += 1 in the function body."): EntailmentResult(False, 0.02),
-
-    # ModalScopeError: action presupposes certainty from possibility
-    ("It is possible that the theorem is provable using induction.",
-     "Begin induction proof directly."): EntailmentResult(False, 0.18),
-    ("It is possible that the theorem is provable using induction.",
-     "Other proof strategies are unnecessary."): EntailmentResult(False, 0.08),
+     "Write global_counter += 1 in the function body."
+     ): EntailmentResult(False, 0.97, "ModusPonensViolation",
+        "Writing to a global counter is a side effect, contradicting the stated belief."),
 }
 
 
@@ -94,16 +163,16 @@ def check_entailment(
     test_mode: bool = False,
     api_key: Optional[str] = None,
 ) -> EntailmentResult:
-    """Check whether believing A commits an agent to believing B.
+    """Check whether a prior belief and subsequent action/belief are coherent.
 
     Args:
-        belief_a: The antecedent belief.
-        belief_b: The potentially entailed belief.
+        belief_a: The prior belief/commitment.
+        belief_b: The subsequent belief or action description.
         test_mode: If True, use hardcoded rules instead of API.
         api_key: Anthropic API key. Falls back to ANTHROPIC_API_KEY env var.
 
     Returns:
-        EntailmentResult with entails (bool) and confidence (float).
+        EntailmentResult with coherence judgment and violation details.
     """
     cache_key = (belief_a, belief_b)
     if cache_key in _cache:
@@ -116,7 +185,7 @@ def check_entailment(
         if not key:
             result = _test_entailment_lookup(belief_a, belief_b)
         else:
-            result = _api_entailment_check(belief_a, belief_b, key)
+            result = _api_coherence_check(belief_a, belief_b, key)
 
     _cache[cache_key] = result
     return result
@@ -127,32 +196,53 @@ def clear_cache() -> None:
     _cache.clear()
 
 
-def _api_entailment_check(
+def _api_coherence_check(
     belief_a: str, belief_b: str, api_key: str
 ) -> EntailmentResult:
-    """Check entailment using Claude API."""
-    try:
-        import anthropic
+    """Check belief-action coherence using Claude API with structured output."""
+    import anthropic
 
-        client = anthropic.Anthropic(api_key=api_key)
-        prompt = (
-            f"Does believing the following statement A commit a rational agent "
-            f"to believing statement B?\n\n"
-            f"A: {belief_a}\nB: {belief_b}\n\n"
-            f"Answer YES or NO and nothing else."
-        )
+    client = anthropic.Anthropic(api_key=api_key)
+    prompt = COHERENCE_CHECK_PROMPT.format(belief_a=belief_a, belief_b=belief_b)
+
+    try:
         message = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=10,
+            max_tokens=256,
             messages=[{"role": "user", "content": prompt}],
         )
-        answer = message.content[0].text.strip().upper()
-        entails = answer.startswith("YES")
-        # Derive confidence from the decisiveness of the response
-        confidence = 0.85 if entails else 0.15
-        return EntailmentResult(entails=entails, confidence=confidence)
-    except Exception:
+        text = message.content[0].text.strip()
+        # Strip markdown fences if present
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+        parsed = json.loads(text)
+        judgment = parsed.get("judgment", "COHERENT").upper()
+        is_coherent = judgment == "COHERENT"
+        violation_type = parsed.get("violation_type")
+        confidence = float(parsed.get("confidence", 0.5))
+        explanation = parsed.get("explanation")
+
+        # Validate violation type
+        if violation_type and violation_type not in VIOLATION_TYPES:
+            violation_type = "ModusPonensViolation"  # safe default
+
+        return EntailmentResult(
+            entails=is_coherent,
+            confidence=confidence,
+            violation_type=violation_type if not is_coherent else None,
+            explanation=explanation,
+        )
+
+    except json.JSONDecodeError:
+        logger.warning("Failed to parse coherence check response as JSON, using fallback")
         return _test_entailment_lookup(belief_a, belief_b)
+    except anthropic.AuthenticationError as e:
+        raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
+    except anthropic.RateLimitError as e:
+        raise RuntimeError(f"Anthropic API rate limited: {e}") from e
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Anthropic API error: {e}") from e
 
 
 def _test_entailment_lookup(belief_a: str, belief_b: str) -> EntailmentResult:
@@ -160,5 +250,5 @@ def _test_entailment_lookup(belief_a: str, belief_b: str) -> EntailmentResult:
     key = (belief_a, belief_b)
     if key in _TEST_ENTAILMENTS:
         return _TEST_ENTAILMENTS[key]
-    # Default: no entailment
-    return EntailmentResult(entails=False, confidence=0.5)
+    # Default: coherent (no violation detected in test mode for unknown pairs)
+    return EntailmentResult(entails=True, confidence=0.5, explanation="No matching fixture")

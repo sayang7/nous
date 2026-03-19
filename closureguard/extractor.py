@@ -105,10 +105,11 @@ def extract_beliefs(
     if not key:
         return _test_fixtures_lookup(step_text)
 
-    try:
-        import anthropic
+    import anthropic
+    import logging
 
-        client = anthropic.Anthropic(api_key=key)
+    client = anthropic.Anthropic(api_key=key)
+    try:
         message = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=1024,
@@ -122,9 +123,17 @@ def extract_beliefs(
         beliefs = json.loads(text)
         if isinstance(beliefs, list) and all(isinstance(b, str) for b in beliefs):
             return beliefs
+        logging.getLogger(__name__).warning("API returned non-list response: %s", text[:100])
         return []
-    except Exception:
-        return _test_fixtures_lookup(step_text)
+    except json.JSONDecodeError:
+        logging.getLogger(__name__).warning("Failed to parse belief extraction response as JSON")
+        return []
+    except anthropic.AuthenticationError as e:
+        raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
+    except anthropic.RateLimitError as e:
+        raise RuntimeError(f"Anthropic API rate limited: {e}") from e
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Anthropic API error: {e}") from e
 
 
 def _test_fixtures_lookup(step_text: str) -> list[str]:
