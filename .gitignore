@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.lake/
+lake-packages/
+lake-manifest.json
+*.olean
+*.ilean
+*.trace
+build/
+eval/results/
+.pytest_cache/
+dist/
+*.egg-info/
