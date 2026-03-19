@@ -18,7 +18,7 @@ Large language model agents routinely violate epistemic closure: they state a be
 
 ### Formal Theory (`theory/`)
 
-Lean 4 definitions establishing the formal foundation. Defines `Belief`, `AgentStep`, `ReasoningTrace`, and `EntailmentRelation` as core types. The `EpistemicallyClosed` predicate captures Hintikka's closure condition over belief sets. The `ViolationType` inductive type formalizes our five-category taxonomy. Two theorems — `violation_implies_incoherence` and `violation_witness_breaks_closure` — are proven without `sorry`, establishing that any violation witness is a constructive counterexample to epistemic closure.
+Lean 4 formalization in two layers. **Layer 1** defines Kripke semantics for epistemic logic: possible worlds, accessibility relations, epistemic formulas with a knowledge operator K, and a recursive satisfaction relation. We prove Hintikka's epistemic closure axiom — K(P) and K(P implies Q) implies K(Q) — as a *theorem* from the Kripke semantics (not assumed as an axiom). We also prove Axiom T (factivity), positive introspection (Axiom 4), and the key soundness result: any violation witnesses that the agent acted against a known truth. **Layer 2** defines the trace-level data structures (Belief, AgentStep, ViolationType taxonomy) used by the Python detector. All theorems have complete proofs — no `sorry`.
 
 ### Belief Extractor (`closureguard/extractor.py`)
 
@@ -30,7 +30,7 @@ Determines whether believing A commits an agent to believing B. Returns both a b
 
 ### Violation Detector (`closureguard/detector.py`)
 
-The main pipeline. For each step in a trace: extracts beliefs, checks entailments against all prior beliefs AND against the step's action (treated as an implicit belief), and classifies detected violations into the five-type taxonomy. Deduplicates violations by (step, antecedent, type). Returns structured `ClosureViolationReport` objects with step index, belief pair, violation type, and confidence score.
+Two-phase detection pipeline. Phase 1: extract beliefs from all trace steps upfront. Phase 2: for each step, check every prior belief against the step's action *and* new beliefs for coherence. Violation classification comes from the checker's structured response (not keyword heuristics), making the detector robust on novel traces with API access. Deduplicates violations by (step, antecedent, type). Returns structured `ClosureViolationReport` objects.
 
 ### Scorer (`closureguard/scorer.py`)
 
@@ -71,22 +71,25 @@ lake build
 To run with live Claude API inference instead of test fixtures:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=your-api-key-here
 python eval/run_eval.py
 ```
 
 ## Lean 4 Formal Definitions
 
-The formal theory is in [`theory/ClosureViolation.lean`](theory/ClosureViolation.lean). Key definitions:
+The formal theory is in [`theory/ClosureViolation.lean`](theory/ClosureViolation.lean). Key results:
 
-- `EpistemicallyClosed` — a belief set is closed under entailment
-- `ClosureViolation` — a record witnessing a specific violation
-- `ViolationType` — the five-category taxonomy
-- `TraceEpistemicallyClosed` — closure condition lifted to reasoning traces
-- `violation_implies_incoherence` — proven theorem: any violation witness refutes closure
-- `violation_witness_breaks_closure` — proven corollary with content-distinctness
+- `KripkeFrame`, `KripkeModel`, `EpistemicFormula` — standard Kripke semantics
+- `satisfies` — recursive satisfaction relation (M, w |= phi)
+- `epistemic_closure` — **Axiom K proven from semantics**: K(P) and K(P->Q) -> K(Q)
+- `knowledge_is_factive` — **Axiom T**: K(P) -> P (requires reflexivity)
+- `known_consequence_holds` — K + T combined: known commitments hold at actual world
+- `positive_introspection` — **Axiom 4**: K(P) -> K(K(P)) (requires transitivity)
+- `violation_contradicts_known_truth` — **Soundness**: any violation witnesses that Q holds but the action contradicts Q
+- `ViolationType` — five-category taxonomy
+- `entailment_outside_set_breaks_closure` — deductive closure witness lemma
 
-All definitions typecheck with `lake build` on Lean 4 v4.16.0. Both theorems have complete proofs.
+All definitions typecheck with `lake build` on Lean 4 v4.16.0. All proofs are complete (no `sorry`).
 
 ## Evaluation Results
 

@@ -176,13 +176,25 @@ def main() -> None:
     results_dir = Path(__file__).parent / "results"
     results_dir.mkdir(exist_ok=True)
 
-    # Determine mode
-    has_api_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    test_mode = not has_api_key
-    if test_mode:
-        print("[INFO] No ANTHROPIC_API_KEY found. Running in test mode (hardcoded fixtures).")
+    # Determine mode: validate API key if present
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    test_mode = True
+    if api_key:
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=10,
+                messages=[{"role": "user", "content": "Say OK"}],
+            )
+            test_mode = False
+            print("[INFO] API key validated. Using Claude API for inference.")
+        except Exception as e:
+            print(f"[WARN] API key present but invalid ({type(e).__name__}). Falling back to test mode.")
+            test_mode = True
     else:
-        print("[INFO] Using Claude API for belief extraction and entailment checking.")
+        print("[INFO] No ANTHROPIC_API_KEY found. Running in test mode (hardcoded fixtures).")
 
     # Load and evaluate
     tasks = load_tasks(dataset_path)

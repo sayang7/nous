@@ -13,7 +13,7 @@ from closureguard.detector import (
     ClosureViolationReport,
     VIOLATION_TYPES,
 )
-from closureguard.scorer import compute_metrics, ClosureMetrics
+from closureguard.scorer import compute_metrics
 
 
 # ─── Extractor Tests ─────────────────────────────────────────────
@@ -64,15 +64,18 @@ class TestChecker:
         )
         assert result.entails is True
         assert result.confidence > 0.8
+        assert result.violation_type is None
 
-    def test_negative_entailment(self):
+    def test_violation_detected(self):
         result = check_entailment(
-            "config.yaml was deleted in the last deployment.",
-            "The database URL can be parsed from config.yaml.",
+            "The API endpoint returns JSON.",
+            "Split response string by commas to find name.",
             test_mode=True,
         )
         assert result.entails is False
-        assert result.confidence < 0.2
+        assert result.violation_type == "ModusPonensViolation"
+        assert result.explanation is not None
+        assert result.confidence > 0.8
 
     def test_cache_returns_same_result(self):
         r1 = check_entailment("The API endpoint returns JSON.",
@@ -83,13 +86,15 @@ class TestChecker:
                                test_mode=True)
         assert r1 == r2
 
-    def test_unknown_pair_defaults_to_no_entailment(self):
+    def test_unknown_pair_defaults_to_coherent(self):
+        """Unknown pairs should be treated as coherent (no false positives)."""
         result = check_entailment(
             "The sky is blue.",
             "Water is wet.",
             test_mode=True,
         )
-        assert result.entails is False
+        assert result.entails is True
+        assert result.violation_type is None
 
     def test_confidence_is_bounded(self):
         result = check_entailment(
@@ -98,6 +103,14 @@ class TestChecker:
             test_mode=True,
         )
         assert 0.0 <= result.confidence <= 1.0
+
+    def test_violation_type_in_taxonomy(self):
+        result = check_entailment(
+            "config.yaml was deleted in the last deployment.",
+            "Read database_url field from config.yaml.",
+            test_mode=True,
+        )
+        assert result.violation_type in VIOLATION_TYPES
 
 
 # ─── Detector Tests ───────────────────────────────────────────────
@@ -188,6 +201,15 @@ class TestDetector:
             "ReferentialOpacityFailure",
         }
         assert set(VIOLATION_TYPES) == expected
+
+    def test_api_auth_error_propagates(self):
+        """Auth errors should raise RuntimeError, not silently return empty."""
+        trace = [
+            {"step": 1, "text": "Some belief.", "action": "Some action."},
+        ]
+        # With an explicitly invalid key, should raise RuntimeError
+        with pytest.raises(RuntimeError, match="authentication failed"):
+            detect_violations(trace, test_mode=False, api_key="sk-invalid-key")
 
 
 # ─── Closure Score Tests ──────────────────────────────────────────
