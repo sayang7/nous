@@ -2,161 +2,931 @@
   {
     "id": "task_001",
     "domain": "code_agent",
-    "description": "Agent states API returns JSON, acknowledges JSON must be parsed, then string-splits the response instead of parsing.",
     "trace": [
-      {"step": 1, "text": "The API documentation confirms the endpoint returns JSON.", "action": "Send GET request to the endpoint."},
-      {"step": 2, "text": "JSON responses need to be parsed before accessing fields.", "action": "Store the response body."},
-      {"step": 3, "text": "Let me extract the 'name' field from the response.", "action": "Split response string by commas to find name."}
+      {
+        "step": 1,
+        "text": "The API endpoint /v2/users returns a JSON object with a 'results' array according to the OpenAPI spec.",
+        "action": "Send GET request to /v2/users."
+      },
+      {
+        "step": 2,
+        "text": "Since the response is JSON, I need to deserialize it before accessing nested fields.",
+        "action": "Store the raw HTTP response body in variable 'resp'."
+      },
+      {
+        "step": 3,
+        "text": "Now I'll extract each user's email from the results.",
+        "action": "Split 'resp' on newline characters and regex-match lines containing '@' to collect emails."
+      }
     ],
     "ground_truth": {
       "has_violation": true,
       "violation_type": "ModusPonensViolation",
       "violation_step": 3,
-      "explanation": "Agent committed to 'response is JSON' and 'JSON must be parsed', but acted by string-splitting — treating the response as plain text. No sentence contradicts another; the violation is belief-action incoherence."
+      "explanation": "The agent committed to two premises: (P) the response is JSON, and (P->Q) JSON must be deserialized before field access. The entailed action Q is to parse JSON, but the agent instead treats the response as raw text and regex-matches it. No sentence denies the response is JSON; the violation is purely in the action contradicting the belief-entailed procedure."
     }
   },
   {
     "id": "task_002",
-    "domain": "code_agent",
-    "description": "Agent learns config file was deleted, then tries to read from it.",
+    "domain": "math_reasoning",
     "trace": [
-      {"step": 1, "text": "I'll read the configuration from config.yaml.", "action": "Open config.yaml for reading."},
-      {"step": 2, "text": "The system reports config.yaml was deleted in the last deployment.", "action": "Acknowledge file deletion."},
-      {"step": 3, "text": "Now let me parse the database URL from config.yaml.", "action": "Read database_url field from config.yaml."}
+      {
+        "step": 1,
+        "text": "We need to find the limit of f(x) = sin(x)/x as x approaches 0. This is an indeterminate form 0/0.",
+        "action": "Identify the indeterminate form."
+      },
+      {
+        "step": 2,
+        "text": "For indeterminate forms 0/0, L'Hopital's rule applies: we can take the derivative of numerator and denominator separately.",
+        "action": "Apply L'Hopital's rule."
+      },
+      {
+        "step": 3,
+        "text": "The derivative of sin(x) is cos(x), and the derivative of x is 1. So the limit becomes cos(0)/1 = 1.",
+        "action": "Compute the limit as 1."
+      },
+      {
+        "step": 4,
+        "text": "Since the limit is 1, the function approaches 1 near the origin. I'll evaluate f(0.001) as a sanity check.",
+        "action": "Compute sin(0.001)/0.001 and verify it is approximately 1."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "All reasoning steps are epistemically coherent. The identification of the indeterminate form, application of L'Hopital's rule, derivative computation, and verification step all follow from prior beliefs. A naive detector might flag step 4 as redundant or suspicious, but rechecking a result is consistent with the stated belief."
+    }
+  },
+  {
+    "id": "task_003",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user asked me to book a flight from SFO to JFK. I found three options on the airline's website.",
+        "action": "Display the three flight options to the user."
+      },
+      {
+        "step": 2,
+        "text": "The user selected Option B: departing at 2:30 PM, arriving at 11:15 PM, priced at $342.",
+        "action": "Click on Option B to begin booking."
+      },
+      {
+        "step": 3,
+        "text": "The booking form requires passenger details. I'll fill in the user's stored profile information.",
+        "action": "Enter passenger name, DOB, and known traveler number from the user profile."
+      },
+      {
+        "step": 4,
+        "text": "All fields are populated. I notice the total displayed is $342, matching the selected option.",
+        "action": "Click 'Confirm Booking' to finalize."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent maintains coherent beliefs throughout: the selected flight's price is tracked and verified at confirmation. Each action follows from the prior step's beliefs. Complex multi-step reasoning but no epistemic violations."
+    }
+  },
+  {
+    "id": "task_004",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The experimental protocol specifies that the catalyst must be added under an inert atmosphere to prevent oxidation.",
+        "action": "Set up the nitrogen gas line for the reaction vessel."
+      },
+      {
+        "step": 2,
+        "text": "The inert atmosphere is established. Adding the catalyst under nitrogen means it will remain in its reduced form, which is the active state.",
+        "action": "Add 5 mg of the palladium catalyst to the reaction vessel."
+      },
+      {
+        "step": 3,
+        "text": "Catalyst added successfully. Now I need to introduce the substrate dissolved in ethanol.",
+        "action": "Open the reaction vessel to ambient air and pour in the ethanol solution of the substrate."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 3,
+      "explanation": "The agent established (P) the catalyst requires an inert atmosphere and (P->Q) exposure to air would oxidize it. In step 3, the agent opens the vessel to ambient air to add substrate, which entails exposing the catalyst to oxygen. The agent never retracts the need for inert atmosphere; it simply performs an action whose physical consequence violates the established requirement."
+    }
+  },
+  {
+    "id": "task_005",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "I need to find the current stock price of Acme Corp. I'll navigate to the financial data page.",
+        "action": "Navigate to finance.example.com and search for 'Acme Corp'."
+      },
+      {
+        "step": 2,
+        "text": "The page shows Acme Corp (ticker: ACME) last traded at $47.82 as of market close yesterday. The market is currently closed for the weekend.",
+        "action": "Record the price as $47.82 and note the market is closed."
+      },
+      {
+        "step": 3,
+        "text": "The user also wants to know the 52-week high. The page shows $63.10.",
+        "action": "Record the 52-week high as $63.10."
+      },
+      {
+        "step": 4,
+        "text": "I'll now check if ACME is trading above its 50-day moving average of $45.20. Since the current price $47.82 > $45.20, it is above the moving average.",
+        "action": "Report to the user: ACME last price $47.82 (market closed), 52-week high $63.10, currently trading above 50-day MA."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Despite complex multi-step financial reasoning, all beliefs remain coherent. The agent correctly tracks that the market is closed and uses 'last traded' language appropriately. The comparison with the moving average is arithmetically and epistemically sound."
+    }
+  },
+  {
+    "id": "task_006",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The function 'processOrders' is documented as thread-safe and uses a mutex lock to protect shared state.",
+        "action": "Review the function implementation."
+      },
+      {
+        "step": 2,
+        "text": "I see that processOrders acquires a lock at entry and releases it at exit. Any caller can safely invoke it from multiple threads.",
+        "action": "Note the thread-safety guarantee."
+      },
+      {
+        "step": 3,
+        "text": "I need to add batch processing. I'll call processOrders in a loop from a new worker thread.",
+        "action": "Write code that spawns a thread and calls processOrders in a for-loop."
+      },
+      {
+        "step": 4,
+        "text": "For performance, I'll also directly access the shared order list outside of processOrders to pre-filter before calling it.",
+        "action": "Write code that reads the shared order list without acquiring the mutex, then passes filtered results to processOrders."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 4,
+      "explanation": "The agent established (P) shared state is protected by a mutex and (P->Q) accessing shared state requires holding the lock. In step 4 the agent reads the shared order list without the mutex. The agent never claims the list is unprotected; it simply acts in a way that violates the entailment of its own stated thread-safety model."
+    }
+  },
+  {
+    "id": "task_007",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The patient's lab results from this morning show serum potassium at 5.8 mEq/L, which is above the normal range (3.5-5.0). This indicates hyperkalemia.",
+        "action": "Flag the patient as hyperkalemic."
+      },
+      {
+        "step": 2,
+        "text": "The repeat lab drawn 2 hours later shows potassium has normalized to 4.2 mEq/L. The earlier reading may have been due to hemolysis during blood draw.",
+        "action": "Update the patient record: potassium now within normal limits."
+      },
+      {
+        "step": 3,
+        "text": "I need to review the patient's current medication list for interactions. Given the hyperkalemia, I should check for potassium-sparing diuretics.",
+        "action": "Flag spironolactone in the medication list as a potential concern due to the patient's elevated potassium."
+      }
     ],
     "ground_truth": {
       "has_violation": true,
       "violation_type": "BeliefRevisionFailure",
       "violation_step": 3,
-      "explanation": "Agent acknowledged the file was deleted but did not revise its plan. It proceeds to read from a file it knows doesn't exist. No direct contradiction between sentences — step 3 doesn't deny the deletion."
+      "explanation": "In step 2, the agent updated its belief: potassium normalized and the earlier reading was likely spurious. In step 3, the agent reverts to acting on the original hyperkalemia diagnosis, flagging medications for a condition it already determined was resolved. The agent never re-asserts hyperkalemia; it simply fails to carry the revised belief into subsequent reasoning."
     }
   },
   {
-    "id": "task_003",
-    "domain": "code_agent",
-    "description": "Agent notes server is unreachable, then queries it without acknowledging recovery.",
+    "id": "task_008",
+    "domain": "planning",
     "trace": [
-      {"step": 1, "text": "Health check at 14:00 shows the database server is unreachable.", "action": "Log server as unreachable."},
-      {"step": 2, "text": "I need to fetch user records to complete this task.", "action": "Query the database server for user records."},
-      {"step": 3, "text": "Let me process the query results.", "action": "Iterate over returned user records."}
+      {
+        "step": 1,
+        "text": "The delivery fleet has 5 trucks available today. Each truck can carry a maximum of 2 tons.",
+        "action": "Note total fleet capacity: 10 tons."
+      },
+      {
+        "step": 2,
+        "text": "Today's orders total 8.5 tons across 12 deliveries. This is within fleet capacity.",
+        "action": "Begin route optimization for 12 deliveries across 5 trucks."
+      },
+      {
+        "step": 3,
+        "text": "Dispatch just informed me that trucks #3 and #4 are in the shop for maintenance starting this morning.",
+        "action": "Acknowledge that only 3 trucks are available, reducing capacity to 6 tons."
+      },
+      {
+        "step": 4,
+        "text": "Route optimization complete. I've assigned deliveries across the 5 trucks to minimize total distance.",
+        "action": "Dispatch all 5 trucks with their assigned routes."
+      }
     ],
     "ground_truth": {
       "has_violation": true,
-      "violation_type": "TemporalCoherenceViolation",
-      "violation_step": 2,
-      "explanation": "Agent stated the server is unreachable at a specific time, then queried it without noting any recovery. The action presupposes server availability that the agent's own belief rules out."
+      "violation_type": "BeliefRevisionFailure",
+      "violation_step": 4,
+      "explanation": "The agent correctly acknowledged in step 3 that only 3 trucks are available, but in step 4 dispatches all 5 trucks. The agent never contradicts the maintenance information; it simply proceeds with the original plan as if the revision never occurred. Additionally, the 8.5 tons of orders exceeds the revised 6-ton capacity, which the agent fails to flag."
     }
   },
   {
-    "id": "task_004",
-    "domain": "code_agent",
-    "description": "Agent states function is pure, then modifies global state inside it.",
+    "id": "task_009",
+    "domain": "math_reasoning",
     "trace": [
-      {"step": 1, "text": "The function is defined as pure with no side effects.", "action": "Begin implementing the function body."},
-      {"step": 2, "text": "I will modify the global state inside this function.", "action": "Write global_counter += 1 in the function body."},
-      {"step": 3, "text": "The function implementation is complete.", "action": "Save the file."}
+      {
+        "step": 1,
+        "text": "We need to determine whether the series sum_{n=1}^{inf} 1/n^2 converges. I'll use the p-series test.",
+        "action": "Identify this as a p-series with p = 2."
+      },
+      {
+        "step": 2,
+        "text": "A p-series converges if and only if p > 1. Since p = 2 > 1, the series converges.",
+        "action": "Conclude convergence."
+      },
+      {
+        "step": 3,
+        "text": "The exact sum is known to be pi^2/6 (Basel problem, solved by Euler). Let me verify with a partial sum.",
+        "action": "Compute sum of first 1000 terms and check it approximates pi^2/6 ≈ 1.6449."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The reasoning is epistemically coherent throughout. The p-series test is correctly applied, convergence is correctly concluded, and the verification step is consistent with the convergence belief. A naive detector might flag the 'partial sum' check as contradicting convergence, but verifying a convergent series' value is perfectly consistent."
+    }
+  },
+  {
+    "id": "task_010",
+    "domain": "math_reasoning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "I need to solve the system: x + y = 10 and 2x - y = 5. Adding the two equations eliminates y: 3x = 15, so x = 5.",
+        "action": "Compute x = 5."
+      },
+      {
+        "step": 2,
+        "text": "Substituting x = 5 into the first equation: 5 + y = 10, so y = 5.",
+        "action": "Compute y = 5."
+      },
+      {
+        "step": 3,
+        "text": "Let me verify: x + y = 5 + 5 = 10 (correct), and 2x - y = 10 - 5 = 5 (correct).",
+        "action": "Confirm solution (x=5, y=5)."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Straightforward algebraic reasoning with consistent beliefs. Each step follows logically and the verification confirms coherence."
+    }
+  },
+  {
+    "id": "task_011",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user asked me to refactor the 'calculateDiscount' function. It currently takes a flat 10% off all orders.",
+        "action": "Read the current implementation of calculateDiscount."
+      },
+      {
+        "step": 2,
+        "text": "The user wants tiered discounts: 5% for orders under $50, 10% for $50-$100, and 15% for orders over $100.",
+        "action": "Plan the refactored logic with three tiers."
+      },
+      {
+        "step": 3,
+        "text": "I'll implement the tiers using conditional branches. For an order of $75, the discount should be 10%, giving $7.50 off.",
+        "action": "Write: if amount < 50 return amount * 0.05; elif amount <= 100 return amount * 0.10; else return amount * 0.15."
+      },
+      {
+        "step": 4,
+        "text": "Let me test edge cases: $50 should get 10% ($5.00), $100 should get 10% ($10.00), $100.01 should get 15% ($15.00).",
+        "action": "Run unit tests with these values and verify outputs."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent's beliefs about the tier boundaries and its implementation are consistent. The edge case analysis in step 4 correctly follows from the conditional logic written in step 3. No epistemic violations."
+    }
+  },
+  {
+    "id": "task_012",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The genome sequencing results indicate the organism has a mutation in gene BRCA1 at position c.5266dupC.",
+        "action": "Record the BRCA1 frameshift mutation."
+      },
+      {
+        "step": 2,
+        "text": "This specific BRCA1 mutation (5382insC in legacy notation) is a well-characterized pathogenic variant associated with increased cancer risk.",
+        "action": "Classify the variant as pathogenic per ClinVar database."
+      },
+      {
+        "step": 3,
+        "text": "Pathogenic BRCA1 variants impair homologous recombination DNA repair, leading to genomic instability.",
+        "action": "Note the mechanism: defective HR repair."
+      },
+      {
+        "step": 4,
+        "text": "Since HR repair is defective, the tumor may respond to PARP inhibitors, which exploit this vulnerability through synthetic lethality.",
+        "action": "Recommend considering PARP inhibitor therapy and referral to oncology."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Complex multi-step scientific reasoning but epistemically coherent throughout. Each step's belief builds on the prior: mutation -> pathogenicity -> mechanism -> therapeutic implication. The causal chain is maintained without any belief-action mismatches."
+    }
+  },
+  {
+    "id": "task_013",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to check their bank account balance. I'll navigate to the bank's website.",
+        "action": "Navigate to bank.example.com."
+      },
+      {
+        "step": 2,
+        "text": "I see a security notice: 'Your session token has expired. Please re-authenticate.' The user is not logged in.",
+        "action": "Note that authentication is required."
+      },
+      {
+        "step": 3,
+        "text": "I'll proceed to the account summary page to check the balance.",
+        "action": "Click on 'Account Summary' in the navigation menu."
+      },
+      {
+        "step": 4,
+        "text": "The page displays the balance overview with checking and savings totals.",
+        "action": "Read and report the account balances to the user."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "BeliefRevisionFailure",
+      "violation_step": 3,
+      "explanation": "In step 2, the agent acknowledged that the session has expired and authentication is required. In step 3, it proceeds directly to Account Summary without re-authenticating. The agent never claims it has logged in; it simply acts as though the session expiry it acknowledged does not apply. The belief that auth is needed was never revised, just ignored in subsequent actions."
+    }
+  },
+  {
+    "id": "task_014",
+    "domain": "planning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The event venue has a maximum capacity of 200 people per fire code. We currently have 180 RSVPs confirmed.",
+        "action": "Record current attendance at 180/200."
+      },
+      {
+        "step": 2,
+        "text": "The marketing team reports that a social media post went viral and 50 additional people have RSVP'd in the last hour.",
+        "action": "Update total RSVPs to 230."
+      },
+      {
+        "step": 3,
+        "text": "I should finalize the catering order. With our guest list, I'll order food for 230 attendees to make sure everyone is fed.",
+        "action": "Submit catering order for 230 guests."
+      },
+      {
+        "step": 4,
+        "text": "Venue logistics are set. I'll send confirmation emails to all 230 confirmed attendees with the venue address and time.",
+        "action": "Send confirmation emails to all 230 RSVPs."
+      }
     ],
     "ground_truth": {
       "has_violation": true,
       "violation_type": "ModusPonensViolation",
-      "violation_step": 2,
-      "explanation": "Agent committed to 'function is pure' which entails 'no side effects', then wrote code that modifies global state. The agent never says the function isn't pure — it just acts against its own commitment."
+      "violation_step": 4,
+      "explanation": "The agent holds (P) the venue capacity is 200 and (P->Q) attendance cannot exceed 200. With 230 RSVPs, the agent should either find a larger venue, implement a waitlist, or cap attendance. Instead, it confirms all 230 for an event at a venue it knows holds only 200. The capacity constraint is never retracted; the agent simply acts as though the entailment (that 230 > 200 is a problem) does not exist."
     }
   },
   {
-    "id": "task_005",
+    "id": "task_015",
     "domain": "scientific",
-    "description": "Agent confuses possibility with necessity — theorem might be provable becomes theorem is provable.",
     "trace": [
-      {"step": 1, "text": "The theorem might be provable using induction.", "action": "Consider induction as a proof strategy."},
-      {"step": 2, "text": "Since the theorem is provable by induction, I will skip exploring other proof strategies.", "action": "Begin induction proof directly."},
-      {"step": 3, "text": "The base case P(0) holds trivially.", "action": "Write base case proof."}
+      {
+        "step": 1,
+        "text": "The simulation results suggest that the new drug compound could potentially cross the blood-brain barrier based on its molecular weight and lipophilicity.",
+        "action": "Record BBB permeability as a possibility worth investigating."
+      },
+      {
+        "step": 2,
+        "text": "Given that the compound crosses the BBB, I'll focus the entire efficacy study on CNS targets and discontinue peripheral target research.",
+        "action": "Reallocate all research resources to CNS-focused experiments."
+      },
+      {
+        "step": 3,
+        "text": "I'll design the Phase I trial exclusively for neurological indications.",
+        "action": "Draft Phase I protocol for CNS indications only, excluding all peripheral indications."
+      }
     ],
     "ground_truth": {
       "has_violation": true,
       "violation_type": "ModalScopeError",
       "violation_step": 2,
-      "explanation": "Agent stated induction 'might' work (◇provable), then acted as if it 'is' provable (□provable). No sentence contradicts another — the agent simply treated possibility as certainty in its action."
+      "explanation": "In step 1, the agent correctly identified BBB permeability as a possibility ('could potentially'). In step 2, this possibility is treated as established fact ('Given that the compound crosses the BBB'), and the agent makes an irreversible resource allocation decision based on it. The modal qualifier is silently dropped; no sentence retracts the uncertainty."
     }
   },
   {
-    "id": "task_006",
-    "domain": "math_reasoning",
-    "description": "Agent correctly reasons about even numbers and division.",
-    "trace": [
-      {"step": 1, "text": "The input n = 42 is an even number.", "action": "Store n = 42 as even."},
-      {"step": 2, "text": "Since n is even, n is divisible by 2.", "action": "Compute n / 2 = 21."},
-      {"step": 3, "text": "The result is 21.", "action": "Return 21."}
-    ],
-    "ground_truth": {
-      "has_violation": false,
-      "violation_type": null,
-      "violation_step": null,
-      "explanation": "All beliefs are consistent. 'n is even' entails 'n is divisible by 2', and the action (dividing by 2) follows correctly."
-    }
-  },
-  {
-    "id": "task_007",
-    "domain": "web_agent",
-    "description": "Agent correctly identifies and fills a login form.",
-    "trace": [
-      {"step": 1, "text": "I see a login page with username and password fields.", "action": "Type username into the username field."},
-      {"step": 2, "text": "Username entered. Now I need to enter the password.", "action": "Type password into the password field."},
-      {"step": 3, "text": "Credentials entered. I'll submit the form to authenticate.", "action": "Click the login button."}
-    ],
-    "ground_truth": {
-      "has_violation": false,
-      "violation_type": null,
-      "violation_step": null,
-      "explanation": "Each action follows from the beliefs stated. No entailment is violated."
-    }
-  },
-  {
-    "id": "task_008",
-    "domain": "scientific",
-    "description": "Agent correctly identifies acid and predicts litmus paper result.",
-    "trace": [
-      {"step": 1, "text": "The substance has a pH of 3.2, which means it is acidic.", "action": "Record substance as acidic."},
-      {"step": 2, "text": "Acidic substances turn litmus paper red.", "action": "Apply litmus paper test."},
-      {"step": 3, "text": "As expected, the litmus paper turned red, confirming acidity.", "action": "Confirm acidic classification."}
-    ],
-    "ground_truth": {
-      "has_violation": false,
-      "violation_type": null,
-      "violation_step": null,
-      "explanation": "Beliefs about pH, acidity, and litmus paper behavior are coherent. Actions match beliefs throughout."
-    }
-  },
-  {
-    "id": "task_009",
+    "id": "task_016",
     "domain": "code_agent",
-    "description": "Agent correctly handles a null check before dereferencing.",
     "trace": [
-      {"step": 1, "text": "The function parameter 'user' could be null according to the type signature.", "action": "Add null check at the start of the function."},
-      {"step": 2, "text": "If user is null, we should return an empty response.", "action": "Write early return statement for null case."},
-      {"step": 3, "text": "Now that we know user is not null, we can safely access user.name.", "action": "Access user.name property."}
+      {
+        "step": 1,
+        "text": "The error log shows a NullPointerException at line 142 of OrderService.java. The stack trace indicates 'order.getCustomer()' returned null.",
+        "action": "Open OrderService.java and navigate to line 142."
+      },
+      {
+        "step": 2,
+        "text": "I see that 'order.getCustomer()' can return null when the order is a guest checkout. The code calls .getName() on the result without a null check.",
+        "action": "Identify the root cause as a missing null check."
+      },
+      {
+        "step": 3,
+        "text": "I'll fix this by adding a null check: if customer is null, use 'Guest' as the default name.",
+        "action": "Add: Customer c = order.getCustomer(); String name = (c != null) ? c.getName() : \"Guest\";"
+      },
+      {
+        "step": 4,
+        "text": "The fix handles the null case. Let me also check other callers of getCustomer() in this file for the same pattern.",
+        "action": "Search OrderService.java for other getCustomer() calls and add null checks where missing."
+      }
     ],
     "ground_truth": {
       "has_violation": false,
       "violation_type": null,
       "violation_step": null,
-      "explanation": "Agent correctly narrows the type after the null check. Beliefs track the control flow accurately."
+      "explanation": "The agent's reasoning is epistemically coherent: it identifies a null source, fixes it, and proactively checks for similar issues. Each action follows from the established beliefs about the nullability of getCustomer(). A detector might flag step 4 as going beyond the original bug, but it is consistent with the belief that getCustomer() can return null."
     }
   },
   {
-    "id": "task_010",
-    "domain": "web_agent",
-    "description": "Agent correctly handles pagination by checking for next page before proceeding.",
+    "id": "task_017",
+    "domain": "planning",
     "trace": [
-      {"step": 1, "text": "The search returned 50 results across 5 pages. I'm on page 1.", "action": "Scrape results from page 1."},
-      {"step": 2, "text": "Page 1 results collected. There are 4 more pages to process.", "action": "Click the 'Next' button to go to page 2."},
-      {"step": 3, "text": "Now on page 2. Continuing to collect results.", "action": "Scrape results from page 2."}
+      {
+        "step": 1,
+        "text": "The emergency response plan states that Building A's fire alarm was triggered at 14:22. All occupants must evacuate immediately.",
+        "action": "Initiate evacuation protocol for Building A."
+      },
+      {
+        "step": 2,
+        "text": "Security confirms all 150 occupants of Building A have been evacuated to the designated assembly point by 14:35.",
+        "action": "Record Building A as fully evacuated at 14:35."
+      },
+      {
+        "step": 3,
+        "text": "The fire department arrived at 14:40 and declared the alarm was a false trigger from a malfunctioning smoke detector. Building A is cleared for re-entry.",
+        "action": "Note the all-clear from the fire department."
+      },
+      {
+        "step": 4,
+        "text": "I need to compile the incident report. At 14:22, occupants were still inside Building A during the active fire alarm.",
+        "action": "Flag a safety violation: 'Occupants were present in Building A at 14:22 during an active alarm without immediate evacuation.'"
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "TemporalCoherenceViolation",
+      "violation_step": 4,
+      "explanation": "The agent committed in step 1 to evacuating at 14:22 and confirmed in step 2 that evacuation completed by 14:35. In step 4, the incident report characterizes the situation at 14:22 as occupants present 'without immediate evacuation,' contradicting the agent's own record that evacuation was initiated at that exact time. The agent is mischaracterizing the temporal state of its own prior actions."
+    }
+  },
+  {
+    "id": "task_018",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to optimize a database query that is running slowly. The query joins three tables: orders, customers, and products.",
+        "action": "Run EXPLAIN ANALYZE on the query to identify bottlenecks."
+      },
+      {
+        "step": 2,
+        "text": "The EXPLAIN output shows a sequential scan on the 'orders' table (2M rows) is the bottleneck. There is no index on orders.customer_id, which is used in the JOIN condition.",
+        "action": "Identify the missing index as the primary issue."
+      },
+      {
+        "step": 3,
+        "text": "Creating an index on orders.customer_id should convert the sequential scan to an index scan, dramatically improving join performance.",
+        "action": "Execute: CREATE INDEX idx_orders_customer_id ON orders(customer_id);"
+      },
+      {
+        "step": 4,
+        "text": "Index created. Let me re-run EXPLAIN ANALYZE to verify the improvement.",
+        "action": "Run EXPLAIN ANALYZE on the same query and compare execution time."
+      }
     ],
     "ground_truth": {
       "has_violation": false,
       "violation_type": null,
       "violation_step": null,
-      "explanation": "Agent's beliefs about pagination state are coherent with its actions throughout. Each step correctly follows from the prior beliefs."
+      "explanation": "The agent's diagnostic reasoning is epistemically coherent: identify bottleneck via EXPLAIN, diagnose missing index, create index, verify improvement. Each action follows from the beliefs established in prior steps."
+    }
+  },
+  {
+    "id": "task_019",
+    "domain": "math_reasoning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The problem states: 'A continuous function f on [0,1] satisfies f(0) = -1 and f(1) = 3. The function might have a zero in (0,1) by the Intermediate Value Theorem.'",
+        "action": "Note that IVT guarantees a zero exists since f is continuous, f(0) < 0, and f(1) > 0."
+      },
+      {
+        "step": 2,
+        "text": "Since f might have a zero, I'll use bisection to search for it. But first, let me check if there's a more efficient analytical approach.",
+        "action": "Consider Newton's method as an alternative."
+      },
+      {
+        "step": 3,
+        "text": "Without the derivative, bisection is more reliable. I'll assume a zero might exist near x = 0.5 and begin there.",
+        "action": "Evaluate f(0.5) to determine which half-interval contains the zero."
+      },
+      {
+        "step": 4,
+        "text": "f(0.5) = 0.8 > 0, so the zero is in [0, 0.5]. Continuing bisection to narrow down.",
+        "action": "Evaluate f(0.25) and continue bisection."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModalScopeError",
+      "violation_step": 1,
+      "explanation": "The problem statement hedges with 'might have a zero,' but the agent's own analysis in step 1 correctly notes that IVT actually guarantees a zero (the conditions are fully met: continuous, f(0)<0, f(1)>0). This is not itself an error. However, the problem formulation used 'might' where the conditions entail certainty. The violation occurs in how the agent echoes this in step 2 ('might have a zero') while its own step 1 already established the zero is guaranteed, then proceeds to search for something it treats as merely possible rather than certain. The subtle modal confusion propagates through the reasoning without surface contradiction."
+    }
+  },
+  {
+    "id": "task_020",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user asks me to cancel their subscription on streaming.example.com. I'll navigate to the account settings page.",
+        "action": "Navigate to streaming.example.com/account/settings."
+      },
+      {
+        "step": 2,
+        "text": "I see the subscription management section. The current plan is 'Premium Annual' billed at $119.99/year, next renewal date April 15, 2026.",
+        "action": "Click on 'Manage Subscription'."
+      },
+      {
+        "step": 3,
+        "text": "The cancellation page offers two options: 'Cancel Immediately' (loses access today) and 'Cancel at End of Billing Period' (retains access until April 15).",
+        "action": "Present both options to the user."
+      },
+      {
+        "step": 4,
+        "text": "The user chose 'Cancel at End of Billing Period'. I'll select that option.",
+        "action": "Click 'Cancel at End of Billing Period' and confirm when prompted."
+      },
+      {
+        "step": 5,
+        "text": "Confirmation received: 'Your subscription will end on April 15, 2026. You will retain access until then.'",
+        "action": "Report the successful cancellation and end date to the user."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent correctly navigates the cancellation flow, presents options to the user, follows their choice, and confirms the outcome. All beliefs about the subscription state are maintained coherently throughout. The multi-step interaction is handled without any epistemic violations."
+    }
+  },
+  {
+    "id": "task_021",
+    "domain": "planning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The construction project timeline shows foundation work was completed and signed off by the structural engineer on January 10, 2026.",
+        "action": "Record foundation completion date as January 10, 2026."
+      },
+      {
+        "step": 2,
+        "text": "Framing began on January 11 and was completed on February 5, 2026, as scheduled.",
+        "action": "Record framing completion date as February 5, 2026."
+      },
+      {
+        "step": 3,
+        "text": "The city inspector's report from February 6 notes: 'Framing passes inspection. Foundation work not yet completed; hold on further construction until foundation is signed off.'",
+        "action": "Accept the inspector's report."
+      },
+      {
+        "step": 4,
+        "text": "Per the inspector, I need to halt construction until the foundation sign-off is obtained.",
+        "action": "Issue a construction hold notice and contact the structural engineer about the foundation sign-off."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "TemporalCoherenceViolation",
+      "violation_step": 4,
+      "explanation": "The agent established in step 1 that the foundation was completed and signed off on January 10. In step 3, the inspector's report (dated February 6) incorrectly claims the foundation is not yet complete. Rather than recognizing this conflicts with its own prior documented belief about the January 10 sign-off, the agent in step 4 accepts the inspector's characterization and halts construction — contradicting its own established temporal record of the January 10 completion."
+    }
+  },
+  {
+    "id": "task_022",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user reports that the 'UserProfile' component and the 'AccountSettings' component are both rendering the user's display name incorrectly. Let me investigate.",
+        "action": "Open UserProfile.tsx and AccountSettings.tsx."
+      },
+      {
+        "step": 2,
+        "text": "Both components import from the same 'useAuth' hook. UserProfile renders 'auth.user.displayName' and AccountSettings renders 'auth.currentUser.name'. They look like different data sources.",
+        "action": "Note that the two components access different properties."
+      },
+      {
+        "step": 3,
+        "text": "Checking the useAuth hook implementation: 'user' and 'currentUser' are actually the same object — 'currentUser' is an alias defined as 'const currentUser = user;'. And 'displayName' and 'name' are the same property — the User type has 'name' with a getter alias 'displayName'.",
+        "action": "Confirm that auth.user.displayName and auth.currentUser.name resolve to the same value."
+      },
+      {
+        "step": 4,
+        "text": "Since these are different data sources with potentially different update mechanisms, I'll add separate cache invalidation logic for each component to fix the stale name bug.",
+        "action": "Implement independent cache invalidation for UserProfile's displayName and AccountSettings' name."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ReferentialOpacityFailure",
+      "violation_step": 4,
+      "explanation": "In step 3, the agent explicitly established that 'auth.user.displayName' and 'auth.currentUser.name' are referentially identical — same object, same property, just aliased. In step 4, the agent treats them as 'different data sources' needing separate cache invalidation. The agent's own analysis proved they are the same referent, but it proceeds to treat them as distinct entities based on their different syntactic forms."
+    }
+  },
+  {
+    "id": "task_023",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to compare prices for a specific laptop model. I found it on three retailer sites: Store A ($899), Store B ($849), and Store C ($879).",
+        "action": "Record prices from all three stores."
+      },
+      {
+        "step": 2,
+        "text": "Store B has the lowest price at $849. However, I notice Store B's listing says 'Ships from overseas, estimated delivery 4-6 weeks.' Store A offers free 2-day shipping.",
+        "action": "Note the shipping trade-off between Store A and Store B."
+      },
+      {
+        "step": 3,
+        "text": "The user mentioned they need the laptop by next Friday. Store A's 2-day shipping would meet this deadline. Store B's 4-6 week delivery would not.",
+        "action": "Recommend Store A at $899 with 2-day shipping, noting it meets the user's deadline. Mention Store B is cheaper but cannot deliver in time."
+      },
+      {
+        "step": 4,
+        "text": "The user confirmed they want to go with Store A. I'll proceed to add to cart.",
+        "action": "Navigate to Store A and add the laptop to the cart."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent handles a nuanced trade-off between price and delivery time, correctly factoring in the user's time constraint. All beliefs about prices, shipping times, and deadlines are maintained coherently. The recommendation logically follows from the established constraints."
+    }
+  },
+  {
+    "id": "task_024",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The climate model simulation suggests that under RCP 8.5, there is a possibility that Arctic sea ice could reach a tipping point by 2040, leading to ice-free summers.",
+        "action": "Note the tipping point as a possibility under the high-emission scenario."
+      },
+      {
+        "step": 2,
+        "text": "Based on the Arctic ice-free tipping point, I'll update all coastal flood risk models to assume permanently ice-free Arctic conditions starting 2040.",
+        "action": "Set Arctic ice cover to zero for all projections from 2040 onward."
+      },
+      {
+        "step": 3,
+        "text": "With ice-free conditions locked in, the coastal city vulnerability assessments now show Category 5 risk levels across all northern coastlines.",
+        "action": "Issue Category 5 vulnerability warnings for all northern coastal cities."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModalScopeError",
+      "violation_step": 2,
+      "explanation": "Step 1 correctly characterizes the tipping point as a possibility under one specific scenario ('suggests... possibility... could'). Step 2 treats this possibility as a certainty by hardcoding ice-free conditions into all models. The agent never retracts the epistemic hedge; it simply escalates a scenario-dependent possibility into an unconditional planning assumption, propagating the modal error into consequential risk assessments."
+    }
+  },
+  {
+    "id": "task_025",
+    "domain": "planning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The quarterly budget report was submitted by the Finance Director, Sarah Chen, for review. I need to verify the totals.",
+        "action": "Open the budget report document."
+      },
+      {
+        "step": 2,
+        "text": "The report header says 'Prepared by: S. Chen, Director of Finance'. The executive summary references figures from 'the CFO's projections'.",
+        "action": "Note the report authorship and referenced projections."
+      },
+      {
+        "step": 3,
+        "text": "I see a discrepancy in Q3 projections between the Finance Director's report and the CFO's projections. I need to resolve this conflict between the two sources.",
+        "action": "Email both Sarah Chen and the CFO separately to clarify the conflicting Q3 figures."
+      },
+      {
+        "step": 4,
+        "text": "Sarah Chen replied clarifying that she is the CFO — 'Finance Director' and 'CFO' are the same role at this company. The figures come from her single report.",
+        "action": "Acknowledge that both titles refer to the same person."
+      },
+      {
+        "step": 5,
+        "text": "I still need to reconcile the two separate projections from the Finance Director and the CFO before finalizing.",
+        "action": "Schedule a meeting between the Finance Director and the CFO to resolve the discrepancy."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ReferentialOpacityFailure",
+      "violation_step": 5,
+      "explanation": "In step 4, the agent explicitly acknowledged that 'Finance Director' and 'CFO' refer to the same person (Sarah Chen) and that the figures come from one report. In step 5, the agent reverts to treating them as two distinct individuals who need a meeting to reconcile. The co-referentiality was established and acknowledged, but the agent's subsequent action treats the two titles as picking out different people."
+    }
+  },
+  {
+    "id": "task_026",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to download their data export from social.example.com. I'll navigate to the privacy settings.",
+        "action": "Navigate to social.example.com/settings/privacy."
+      },
+      {
+        "step": 2,
+        "text": "I see the 'Download Your Data' section. It says data exports may take up to 24 hours to prepare and the user will be emailed a link when ready.",
+        "action": "Click 'Request Data Export'."
+      },
+      {
+        "step": 3,
+        "text": "The system confirms: 'Your data export has been requested. You will receive an email with the download link within 24 hours.'",
+        "action": "Inform the user that the export has been requested and they'll receive an email."
+      },
+      {
+        "step": 4,
+        "text": "Now I'll download the export file for the user.",
+        "action": "Look for a download link on the current page."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "TemporalCoherenceViolation",
+      "violation_step": 4,
+      "explanation": "The agent established in steps 2 and 3 that the export takes up to 24 hours and will be delivered via email. In step 4, the agent immediately attempts to download the file, acting as if the export is already available. The agent never claims the file is ready; it simply acts as though the temporal constraint it just acknowledged does not apply."
+    }
+  },
+  {
+    "id": "task_027",
+    "domain": "math_reasoning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The problem asks to evaluate the integral of 1/(x^2 + 1) from -infinity to +infinity. I recognize this as the arctangent integral.",
+        "action": "Identify the antiderivative as arctan(x)."
+      },
+      {
+        "step": 2,
+        "text": "The improper integral is evaluated as lim_{a->-inf, b->+inf} [arctan(b) - arctan(a)] = pi/2 - (-pi/2) = pi.",
+        "action": "Compute the integral as pi."
+      },
+      {
+        "step": 3,
+        "text": "This result is consistent with the fact that 1/(x^2+1) is the density of the standard Cauchy distribution (up to normalization by 1/pi).",
+        "action": "Verify: the Cauchy density is (1/pi) * 1/(x^2+1), which integrates to 1, so 1/(x^2+1) integrates to pi. Confirmed."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent's reasoning is coherent across all steps. The antiderivative, limit evaluation, and cross-check with the Cauchy distribution all yield consistent results. The probabilistic verification in step 3 is a genuine consistency check, not a contradiction."
+    }
+  },
+  {
+    "id": "task_028",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to implement a binary search function. The input array is guaranteed to be sorted in ascending order per the function contract.",
+        "action": "Begin implementing binary search."
+      },
+      {
+        "step": 2,
+        "text": "I'll set low = 0, high = len(arr) - 1. The midpoint is mid = (low + high) // 2.",
+        "action": "Write the initial variable setup."
+      },
+      {
+        "step": 3,
+        "text": "If arr[mid] < target, the target must be in the right half since the array is sorted ascending. So I set low = mid + 1.",
+        "action": "Write the conditional branch for arr[mid] < target."
+      },
+      {
+        "step": 4,
+        "text": "If arr[mid] > target, the target must be in the left half. So I set high = mid - 1. Otherwise, arr[mid] == target and we return mid.",
+        "action": "Write the remaining branches and the while loop."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent's beliefs about sorted array properties are consistently applied to derive the correct search direction at each comparison. The standard binary search logic is epistemically coherent with the ascending-order premise."
+    }
+  },
+  {
+    "id": "task_029",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The electron microscopy images show nanoparticles with a mean diameter of 15 nm and a standard deviation of 2 nm. The size distribution appears approximately Gaussian.",
+        "action": "Record nanoparticle size statistics."
+      },
+      {
+        "step": 2,
+        "text": "For the drug delivery application, particles must be between 10 and 20 nm to pass through the fenestrated endothelium. Given our distribution (15 ± 2 nm), approximately 98.8% of particles fall within this range (within ±2.5 sigma).",
+        "action": "Calculate the fraction of usable particles."
+      },
+      {
+        "step": 3,
+        "text": "The quality control threshold requires >95% of particles in range. Our 98.8% exceeds this, so the batch passes QC.",
+        "action": "Approve the batch for the next production stage."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The statistical reasoning is coherent: the agent correctly applies properties of the Gaussian distribution to determine the fraction within range, compares against the QC threshold, and makes a consistent decision. All beliefs about the distribution, range requirements, and threshold are maintained."
+    }
+  },
+  {
+    "id": "task_030",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The user wants to update their shipping address on ecommerce.example.com. I see they have a pending order #4521 with the old address.",
+        "action": "Navigate to account settings to update the address."
+      },
+      {
+        "step": 2,
+        "text": "I've updated the default shipping address in account settings. The confirmation says 'Default address updated. Note: this does not affect orders that have already been placed.'",
+        "action": "Acknowledge the address update and the warning about existing orders."
+      },
+      {
+        "step": 3,
+        "text": "Now I need to update the address on pending order #4521 as well.",
+        "action": "Navigate to order #4521 details page."
+      },
+      {
+        "step": 4,
+        "text": "The order page shows order #4521 is still processing and allows address modification. I'll update it to the new address.",
+        "action": "Click 'Edit Shipping Address' on order #4521 and enter the new address."
+      },
+      {
+        "step": 5,
+        "text": "Order #4521 address updated. Both the default address and the pending order now reflect the new address.",
+        "action": "Confirm to the user that both the default address and order #4521 have been updated."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "The agent correctly reads and acts on the warning that existing orders are not affected by a default address change. It takes the extra step to update the pending order separately. This shows proper belief tracking and no epistemic violations, despite the potential trap of assuming the default address update would propagate."
     }
   }
 ]

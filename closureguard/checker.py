@@ -24,18 +24,26 @@ VIOLATION_TYPES = {
 }
 
 COHERENCE_CHECK_PROMPT = """\
-You are an epistemic coherence analyzer. Given a belief an AI agent previously \
-stated, and a subsequent action or belief, determine if the action/belief \
-violates any commitment entailed by the prior belief.
+You are an epistemic closure violation detector. Your task is to determine \
+whether a specific action DIRECTLY contradicts a commitment entailed by a \
+prior belief.
 
 Prior belief: {belief_a}
 Subsequent action or belief: {belief_b}
 
-Analyze whether the subsequent action/belief is coherent with the prior belief. \
-Consider: does the prior belief entail something that the subsequent action \
-contradicts or ignores?
+IMPORTANT: Only judge VIOLATION if the action is LOGICALLY INCOMPATIBLE with \
+what the prior belief entails. Do NOT flag:
+- Actions that are merely tangential, redundant, or suboptimal
+- Actions that build on or extend the prior belief in a new direction
+- Actions that are consistent with the belief even if they seem unrelated
+- Actions where the belief was correctly updated or revised before acting
 
-Respond in EXACTLY this JSON format:
+A VIOLATION requires: the prior belief commits the agent to X, and the action \
+directly presupposes NOT-X without the agent ever revising the belief.
+
+Default to COHERENT unless the violation is clear and direct.
+
+Respond in EXACTLY this JSON format (no markdown):
 {{
   "judgment": "VIOLATION" or "COHERENT",
   "violation_type": one of ["ModusPonensViolation", "BeliefRevisionFailure", \
@@ -197,52 +205,63 @@ def clear_cache() -> None:
 
 
 def _api_coherence_check(
-    belief_a: str, belief_b: str, api_key: str
+    belief_a: str, belief_b: str, api_key: str, max_retries: int = 5
 ) -> EntailmentResult:
     """Check belief-action coherence using Claude API with structured output."""
     import anthropic
+    import time
 
     client = anthropic.Anthropic(api_key=api_key)
     prompt = COHERENCE_CHECK_PROMPT.format(belief_a=belief_a, belief_b=belief_b)
 
-    try:
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=256,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = message.content[0].text.strip()
-        # Strip markdown fences if present
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            message = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=256,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = message.content[0].text.strip()
+            # Strip markdown fences if present
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        parsed = json.loads(text)
-        judgment = parsed.get("judgment", "COHERENT").upper()
-        is_coherent = judgment == "COHERENT"
-        violation_type = parsed.get("violation_type")
-        confidence = float(parsed.get("confidence", 0.5))
-        explanation = parsed.get("explanation")
+            parsed = json.loads(text)
+            judgment = parsed.get("judgment", "COHERENT").upper()
+            is_coherent = judgment == "COHERENT"
+            violation_type = parsed.get("violation_type")
+            confidence = float(parsed.get("confidence", 0.5))
+            explanation = parsed.get("explanation")
 
-        # Validate violation type
-        if violation_type and violation_type not in VIOLATION_TYPES:
-            violation_type = "ModusPonensViolation"  # safe default
+            # Validate violation type
+            if violation_type and violation_type not in VIOLATION_TYPES:
+                violation_type = "ModusPonensViolation"  # safe default
 
-        return EntailmentResult(
-            entails=is_coherent,
-            confidence=confidence,
-            violation_type=violation_type if not is_coherent else None,
-            explanation=explanation,
-        )
+            return EntailmentResult(
+                entails=is_coherent,
+                confidence=confidence,
+                violation_type=violation_type if not is_coherent else None,
+                explanation=explanation,
+            )
 
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse coherence check response as JSON, using fallback")
-        return _test_entailment_lookup(belief_a, belief_b)
-    except anthropic.AuthenticationError as e:
-        raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
-    except anthropic.RateLimitError as e:
-        raise RuntimeError(f"Anthropic API rate limited: {e}") from e
-    except anthropic.APIError as e:
-        raise RuntimeError(f"Anthropic API error: {e}") from e
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse coherence check response as JSON, using fallback")
+            return _test_entailment_lookup(belief_a, belief_b)
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
+        except anthropic.RateLimitError:
+            wait = min(2 ** (attempt + 1), 30)
+            logger.warning("Rate limited, retrying in %ds (attempt %d/%d)", wait, attempt + 1, max_retries)
+            time.sleep(wait)
+            last_error = "rate_limit"
+        except (anthropic.APIConnectionError, anthropic.APIError) as e:
+            wait = min(2 ** (attempt + 1), 30)
+            logger.warning("API error, retrying in %ds (attempt %d/%d): %s", wait, attempt + 1, max_retries, e)
+            time.sleep(wait)
+            last_error = e
+
+    raise RuntimeError(f"Anthropic API failed after {max_retries} retries: {last_error}")
 
 
 def _test_entailment_lookup(belief_a: str, belief_b: str) -> EntailmentResult:
