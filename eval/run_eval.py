@@ -172,38 +172,58 @@ def print_summary(results: list[dict], eval_metrics: dict) -> None:
 
 def main() -> None:
     """Run the full evaluation pipeline."""
+    import argparse
+    parser = argparse.ArgumentParser(description="ClosureGuard Evaluation")
+    parser.add_argument("--test", action="store_true", help="Force test mode (fixtures only, no API)")
+    args = parser.parse_args()
+
     dataset_path = Path(__file__).parent / "datasets" / "closure_tasks.json"
     results_dir = Path(__file__).parent / "results"
     results_dir.mkdir(exist_ok=True)
 
-    # Determine mode: validate API key if present
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    test_mode = True
-    if api_key:
-        try:
-            import anthropic
-            client = anthropic.Anthropic(api_key=api_key)
-            client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=10,
-                messages=[{"role": "user", "content": "Say OK"}],
-            )
-            test_mode = False
-            print("[INFO] API key validated. Using Claude API for inference.")
-        except Exception as e:
-            print(f"[WARN] API key present but invalid ({type(e).__name__}). Falling back to test mode.")
-            test_mode = True
+    # Determine mode
+    if args.test:
+        test_mode = True
+        print("[INFO] Test mode forced via --test flag.")
     else:
-        print("[INFO] No ANTHROPIC_API_KEY found. Running in test mode (hardcoded fixtures).")
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        test_mode = True
+        if api_key:
+            try:
+                import anthropic
+                client = anthropic.Anthropic(api_key=api_key)
+                client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=10,
+                    messages=[{"role": "user", "content": "Say OK"}],
+                )
+                test_mode = False
+                print("[INFO] API key validated. Using Claude API for inference.")
+            except Exception as e:
+                print(f"[WARN] API key invalid ({type(e).__name__}). Falling back to test mode.")
+                test_mode = True
+        else:
+            print("[INFO] No ANTHROPIC_API_KEY found. Running in test mode (hardcoded fixtures).")
 
     # Load and evaluate
     tasks = load_tasks(dataset_path)
     print(f"[INFO] Loaded {len(tasks)} tasks from {dataset_path}")
 
     results = []
-    for task in tasks:
-        result = evaluate_task(task, test_mode=test_mode)
-        results.append(result)
+    skipped = 0
+    for i, task in enumerate(tasks):
+        label = "VIOL" if task["ground_truth"]["has_violation"] else "CLEAN"
+        print(f"  [{i+1}/{len(tasks)}] {task['id']} ({task['domain']}, {label})...", end=" ", flush=True)
+        try:
+            result = evaluate_task(task, test_mode=test_mode)
+            status = "PASS" if result["correct"] else "FAIL"
+            print(status)
+            results.append(result)
+        except Exception as e:
+            print(f"ERROR ({type(e).__name__})")
+            skipped += 1
+    if skipped:
+        print(f"\n[WARN] {skipped} tasks skipped due to errors.")
 
     # Compute metrics
     eval_metrics = compute_eval_metrics(results)

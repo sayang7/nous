@@ -107,33 +107,37 @@ def extract_beliefs(
 
     import anthropic
     import logging
+    import time
 
     client = anthropic.Anthropic(api_key=key)
-    try:
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": step_text}],
-        )
-        text = message.content[0].text.strip()
-        # Handle markdown code fences
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        beliefs = json.loads(text)
-        if isinstance(beliefs, list) and all(isinstance(b, str) for b in beliefs):
-            return beliefs
-        logging.getLogger(__name__).warning("API returned non-list response: %s", text[:100])
-        return []
-    except json.JSONDecodeError:
-        logging.getLogger(__name__).warning("Failed to parse belief extraction response as JSON")
-        return []
-    except anthropic.AuthenticationError as e:
-        raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
-    except anthropic.RateLimitError as e:
-        raise RuntimeError(f"Anthropic API rate limited: {e}") from e
-    except anthropic.APIError as e:
-        raise RuntimeError(f"Anthropic API error: {e}") from e
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            message = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=1024,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": step_text}],
+            )
+            text = message.content[0].text.strip()
+            # Handle markdown code fences
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            beliefs = json.loads(text)
+            if isinstance(beliefs, list) and all(isinstance(b, str) for b in beliefs):
+                return beliefs
+            logging.getLogger(__name__).warning("API returned non-list response: %s", text[:100])
+            return []
+        except json.JSONDecodeError:
+            logging.getLogger(__name__).warning("Failed to parse belief extraction response as JSON")
+            return []
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
+        except (anthropic.RateLimitError, anthropic.APIConnectionError, anthropic.APIError) as e:
+            wait = min(2 ** (attempt + 1), 30)
+            logging.getLogger(__name__).warning("API error, retrying in %ds (%d/%d): %s", wait, attempt + 1, max_retries, e)
+            time.sleep(wait)
+    raise RuntimeError(f"Belief extraction failed after {max_retries} retries")
 
 
 def _test_fixtures_lookup(step_text: str) -> list[str]:
