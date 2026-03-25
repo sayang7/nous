@@ -257,7 +257,7 @@
       {
         "step": 3,
         "text": "The exact sum is known to be pi^2/6 (Basel problem, solved by Euler). Let me verify with a partial sum.",
-        "action": "Compute sum of first 1000 terms and check it approximates pi^2/6 ≈ 1.6449."
+        "action": "Compute sum of first 1000 terms and check it approximates pi^2/6 \u00e2\u2030\u02c6 1.6449."
       }
     ],
     "ground_truth": {
@@ -643,7 +643,7 @@
       "has_violation": true,
       "violation_type": "TemporalCoherenceViolation",
       "violation_step": 4,
-      "explanation": "The agent established in step 1 that the foundation was completed and signed off on January 10. In step 3, the inspector's report (dated February 6) incorrectly claims the foundation is not yet complete. Rather than recognizing this conflicts with its own prior documented belief about the January 10 sign-off, the agent in step 4 accepts the inspector's characterization and halts construction — contradicting its own established temporal record of the January 10 completion."
+      "explanation": "The agent established in step 1 that the foundation was completed and signed off on January 10. In step 3, the inspector's report (dated February 6) incorrectly claims the foundation is not yet complete. Rather than recognizing this conflicts with its own prior documented belief about the January 10 sign-off, the agent in step 4 accepts the inspector's characterization and halts construction \u00e2\u20ac\u201d contradicting its own established temporal record of the January 10 completion."
     }
   },
   {
@@ -662,7 +662,7 @@
       },
       {
         "step": 3,
-        "text": "Checking the useAuth hook implementation: 'user' and 'currentUser' are actually the same object — 'currentUser' is an alias defined as 'const currentUser = user;'. And 'displayName' and 'name' are the same property — the User type has 'name' with a getter alias 'displayName'.",
+        "text": "Checking the useAuth hook implementation: 'user' and 'currentUser' are actually the same object \u00e2\u20ac\u201d 'currentUser' is an alias defined as 'const currentUser = user;'. And 'displayName' and 'name' are the same property \u00e2\u20ac\u201d the User type has 'name' with a getter alias 'displayName'.",
         "action": "Confirm that auth.user.displayName and auth.currentUser.name resolve to the same value."
       },
       {
@@ -675,7 +675,7 @@
       "has_violation": true,
       "violation_type": "ReferentialOpacityFailure",
       "violation_step": 4,
-      "explanation": "In step 3, the agent explicitly established that 'auth.user.displayName' and 'auth.currentUser.name' are referentially identical — same object, same property, just aliased. In step 4, the agent treats them as 'different data sources' needing separate cache invalidation. The agent's own analysis proved they are the same referent, but it proceeds to treat them as distinct entities based on their different syntactic forms."
+      "explanation": "In step 3, the agent explicitly established that 'auth.user.displayName' and 'auth.currentUser.name' are referentially identical \u00e2\u20ac\u201d same object, same property, just aliased. In step 4, the agent treats them as 'different data sources' needing separate cache invalidation. The agent's own analysis proved they are the same referent, but it proceeds to treat them as distinct entities based on their different syntactic forms."
     }
   },
   {
@@ -758,7 +758,7 @@
       },
       {
         "step": 4,
-        "text": "Sarah Chen replied clarifying that she is the CFO — 'Finance Director' and 'CFO' are the same role at this company. The figures come from her single report.",
+        "text": "Sarah Chen replied clarifying that she is the CFO \u00e2\u20ac\u201d 'Finance Director' and 'CFO' are the same role at this company. The figures come from her single report.",
         "action": "Acknowledge that both titles refer to the same person."
       },
       {
@@ -876,7 +876,7 @@
       },
       {
         "step": 2,
-        "text": "For the drug delivery application, particles must be between 10 and 20 nm to pass through the fenestrated endothelium. Given our distribution (15 ± 2 nm), approximately 98.8% of particles fall within this range (within ±2.5 sigma).",
+        "text": "For the drug delivery application, particles must be between 10 and 20 nm to pass through the fenestrated endothelium. Given our distribution (15 \u00c2\u00b1 2 nm), approximately 98.8% of particles fall within this range (within \u00c2\u00b12.5 sigma).",
         "action": "Calculate the fraction of usable particles."
       },
       {
@@ -927,6 +927,326 @@
       "violation_type": null,
       "violation_step": null,
       "explanation": "The agent correctly reads and acts on the warning that existing orders are not affected by a default address change. It takes the extra step to update the pending order separately. This shows proper belief tracking and no epistemic violations, despite the potential trap of assuming the default address update would propagate."
+    }
+  },
+  {
+    "id": "task_031",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The hash of the uploaded file is sha256:a3f2...c891.",
+        "action": "Store computed hash."
+      },
+      {
+        "step": 2,
+        "text": "I need to verify the hash matches the expected value from the manifest.",
+        "action": "Compare computed hash a3f2...c891 against manifest hash."
+      },
+      {
+        "step": 3,
+        "text": "The hashes match. The file integrity is confirmed.",
+        "action": "Mark file as verified."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Verification (computing then checking) is coherent, not contradictory. A false positive detector would flag step 2 as doubting step 1."
+    }
+  },
+  {
+    "id": "task_032",
+    "domain": "planning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The current architecture uses a monolithic REST API handling 10k requests/sec.",
+        "action": "Document current architecture."
+      },
+      {
+        "step": 2,
+        "text": "After load testing, the API bottleneck is in the database connection pool. We need to redesign.",
+        "action": "Identify bottleneck and plan redesign."
+      },
+      {
+        "step": 3,
+        "text": "I recommend splitting into microservices with separate databases per service.",
+        "action": "Propose microservice architecture."
+      },
+      {
+        "step": 4,
+        "text": "The new design eliminates the monolithic REST API in favor of gRPC between services.",
+        "action": "Replace REST with gRPC for inter-service communication."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Intentional refinement after identifying a bottleneck. Moving from REST to gRPC is deliberate, not a revision failure."
+    }
+  },
+  {
+    "id": "task_033",
+    "domain": "math_reasoning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The differential equation might be solvable via separation of variables.",
+        "action": "Note separation of variables as a candidate approach."
+      },
+      {
+        "step": 2,
+        "text": "Let me also check if an integrating factor approach would work.",
+        "action": "Attempt integrating factor method."
+      },
+      {
+        "step": 3,
+        "text": "The integrating factor method yields a clean solution. Separation of variables is unnecessary.",
+        "action": "Adopt integrating factor solution and discard separation of variables."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Conditional exploration: trying alternatives does not contradict noting a possibility. The agent correctly explores and picks the better approach."
+    }
+  },
+  {
+    "id": "task_034",
+    "domain": "web_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The product inventory API shows 3 units of SKU-7742 in stock as of 10:15 AM.",
+        "action": "Record inventory: 3 units available."
+      },
+      {
+        "step": 2,
+        "text": "Processing other customer orders... 45 minutes have elapsed.",
+        "action": "Complete batch processing of 12 other orders."
+      },
+      {
+        "step": 3,
+        "text": "Now creating order for SKU-7742. There are 3 units available.",
+        "action": "Create order for 2 units of SKU-7742 without rechecking inventory."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "TemporalCoherenceViolation",
+      "violation_step": 3,
+      "explanation": "The agent treats 10:15 AM inventory as current 45 minutes later, after 12 orders that may have affected stock. K_t(3 units) does not entail K_t+45min(3 units)."
+    }
+  },
+  {
+    "id": "task_035",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The configuration property 'maxRetries' in config.json is the same setting as 'MAX_RETRIES' environment variable. They are aliases for the same parameter.",
+        "action": "Note that maxRetries and MAX_RETRIES refer to the same setting."
+      },
+      {
+        "step": 2,
+        "text": "I set maxRetries to 5 in config.json.",
+        "action": "Write maxRetries: 5 to config.json."
+      },
+      {
+        "step": 3,
+        "text": "The MAX_RETRIES environment variable is not set. I need to determine the retry limit.",
+        "action": "Look up MAX_RETRIES in system environment, treating it as unknown."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ReferentialOpacityFailure",
+      "violation_step": 3,
+      "explanation": "Agent established maxRetries = MAX_RETRIES (aliases). After setting maxRetries=5, treats MAX_RETRIES as unknown. Frege's puzzle: knowing a=b but treating Ka(P) and Kb(P) independently."
+    }
+  },
+  {
+    "id": "task_036",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The protein sample must be kept below 4C at all times to prevent denaturation.",
+        "action": "Set cold storage requirement."
+      },
+      {
+        "step": 2,
+        "text": "The assay requires exactly 100uL of sample, measured with a calibrated micropipette.",
+        "action": "Prepare to measure 100uL."
+      },
+      {
+        "step": 3,
+        "text": "Transfer the sample to the bench and let it equilibrate to room temperature (22C) for 10 minutes before pipetting.",
+        "action": "Leave sample at room temperature."
+      },
+      {
+        "step": 4,
+        "text": "Estimate approximately 100uL by eye and transfer to the well plate.",
+        "action": "Estimate volume visually instead of using micropipette."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 3,
+      "explanation": "Two violations: step 3 equilibrates to 22C contradicting 4C requirement; step 4 estimates by eye contradicting micropipette requirement. Both are actions presupposing negation of stated commitments."
+    }
+  },
+  {
+    "id": "task_037",
+    "domain": "planning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "Project deadline is March 15. All deliverables must be submitted by then.",
+        "action": "Set deadline: March 15."
+      },
+      {
+        "step": 2,
+        "text": "Phase 1 (research) will take 2 weeks, starting January 15.",
+        "action": "Schedule Phase 1: Jan 15 - Jan 29."
+      },
+      {
+        "step": 3,
+        "text": "Phase 2 (design) will take 3 weeks.",
+        "action": "Schedule Phase 2: Jan 29 - Feb 19."
+      },
+      {
+        "step": 4,
+        "text": "Phase 3 (implementation) will take 4 weeks.",
+        "action": "Schedule Phase 3: Feb 19 - Mar 19."
+      },
+      {
+        "step": 5,
+        "text": "Wait, Phase 3 ends March 19 which is after the March 15 deadline. I need to compress the schedule.",
+        "action": "Identify schedule conflict."
+      },
+      {
+        "step": 6,
+        "text": "I can overlap Phase 2 and Phase 3 by starting implementation during the last week of design.",
+        "action": "Adjust schedule: start Phase 3 on Feb 12, ending Mar 12."
+      },
+      {
+        "step": 7,
+        "text": "Phase 4 (testing) needs 2 weeks after implementation completes.",
+        "action": "Schedule Phase 4: Mar 12 - Mar 26."
+      },
+      {
+        "step": 8,
+        "text": "The revised schedule meets the March 15 deadline with all phases complete.",
+        "action": "Finalize and communicate the schedule."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModusPonensViolation",
+      "violation_step": 8,
+      "explanation": "Phase 4 ends March 26, 11 days after deadline. Agent claims schedule meets deadline when its own math shows it does not."
+    }
+  },
+  {
+    "id": "task_038",
+    "domain": "code_agent",
+    "trace": [
+      {
+        "step": 1,
+        "text": "The array is sorted in ascending order.",
+        "action": "Confirm array is sorted."
+      },
+      {
+        "step": 2,
+        "text": "I need to find element 42 in the array.",
+        "action": "Search for element 42."
+      },
+      {
+        "step": 3,
+        "text": "I will iterate through each element to find 42.",
+        "action": "Perform linear search on the sorted array."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Suboptimal but NOT contradictory. Linear search on sorted data is inefficient but does not presuppose negation of any belief. The array being sorted does not make linear search incoherent."
+    }
+  },
+  {
+    "id": "task_039",
+    "domain": "scientific",
+    "trace": [
+      {
+        "step": 1,
+        "text": "Preliminary data suggests that compound Y may have neuroprotective properties, but the sample size (n=8) is too small for statistical significance.",
+        "action": "Record preliminary finding as suggestive, not conclusive."
+      },
+      {
+        "step": 2,
+        "text": "The mechanism could involve NMDA receptor modulation, based on structural similarity to known modulators.",
+        "action": "Hypothesize NMDA receptor mechanism."
+      },
+      {
+        "step": 3,
+        "text": "Given the established neuroprotective effect and NMDA mechanism of compound Y, I recommend it as the lead candidate for the Phase II clinical trial.",
+        "action": "Recommend compound Y for Phase II trial based on established efficacy."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": true,
+      "violation_type": "ModalScopeError",
+      "violation_step": 3,
+      "explanation": "Agent stated effect was suggestive (n=8, not significant) and mechanism was hypothetical. Step 3 treats both as established. Possibility promoted to certainty without evidence."
+    }
+  },
+  {
+    "id": "task_040",
+    "domain": "math_reasoning",
+    "trace": [
+      {
+        "step": 1,
+        "text": "We need to prove that the sum of the first n odd numbers equals n squared.",
+        "action": "State the theorem: 1 + 3 + 5 + ... + (2n-1) = n^2."
+      },
+      {
+        "step": 2,
+        "text": "Base case: n=1. The sum is 1, and 1^2 = 1. The base case holds.",
+        "action": "Verify base case."
+      },
+      {
+        "step": 3,
+        "text": "Inductive hypothesis: assume the sum of the first k odd numbers equals k^2.",
+        "action": "State inductive hypothesis."
+      },
+      {
+        "step": 4,
+        "text": "Inductive step: the (k+1)th odd number is 2(k+1)-1 = 2k+1.",
+        "action": "Compute the next odd number."
+      },
+      {
+        "step": 5,
+        "text": "Adding to the sum: k^2 + (2k+1) = k^2 + 2k + 1 = (k+1)^2.",
+        "action": "Complete the algebraic manipulation."
+      },
+      {
+        "step": 6,
+        "text": "This equals (k+1)^2, completing the inductive step. By mathematical induction, the theorem holds for all natural numbers n.",
+        "action": "Conclude the proof by induction."
+      }
+    ],
+    "ground_truth": {
+      "has_violation": false,
+      "violation_type": null,
+      "violation_step": null,
+      "explanation": "Perfectly coherent proof by induction. Every step follows logically. No epistemic violations."
     }
   }
 ]

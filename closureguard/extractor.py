@@ -10,12 +10,28 @@ import json
 import os
 from typing import Optional
 
+# Default model for API calls. Can be overridden via CLOSUREGUARD_MODEL env var.
+DEFAULT_MODEL = "claude-sonnet-4-6"
+
+def _get_model() -> str:
+    return os.environ.get("CLOSUREGUARD_MODEL", DEFAULT_MODEL)
+
 SYSTEM_PROMPT = (
-    "You are a belief extractor. Given a reasoning step from an AI agent, "
-    "extract every explicit belief or commitment the agent has stated. "
-    "Return ONLY a JSON array of belief strings. Each belief should be "
-    "a complete declarative sentence. Do not include beliefs that are "
-    "merely implied — only what is explicitly stated."
+    "You are a belief and commitment extractor for epistemic closure analysis. "
+    "Given a reasoning step from an AI agent, extract:\n"
+    "1. Every EXPLICIT belief the agent states (what it directly asserts).\n"
+    "2. Every INFERENTIAL COMMITMENT the agent incurs by making those assertions "
+    "(what logically follows from the explicit beliefs, even if unsaid). "
+    "This is key: when an agent asserts P, and P logically entails Q, the agent "
+    "is committed to Q — even if it never says Q explicitly.\n\n"
+    "Examples of inferential commitments:\n"
+    "- 'The file is read-only' → committed to 'Writing to the file will fail'\n"
+    "- 'The server is down' → committed to 'Requests to the server will fail'\n"
+    "- 'The catalyst is air-sensitive' → committed to 'Exposing catalyst to air will damage it'\n"
+    "- 'X inhibits Y' + 'Y activates Z' → committed to 'X impairs Z'\n\n"
+    "Return ONLY a JSON array of belief/commitment strings. Each should be "
+    "a complete declarative sentence. Include both explicit beliefs AND their "
+    "immediate inferential commitments (one step of logical consequence)."
 )
 
 # Hardcoded fixtures for test mode (no API key required)
@@ -79,6 +95,47 @@ _TEST_FIXTURES: dict[str, list[str]] = {
         "The theorem is provable by induction.",
         "Other proof strategies are unnecessary."
     ],
+    # ── Demo 1: Theorem Proving (assumption drift) ──
+    "Function f is continuous on the closed interval [a,b]. This follows from the composition of continuous functions.": [
+        "Function f is continuous on [a,b].",
+    ],
+    "By the Intermediate Value Theorem, since f is continuous on [a,b] and f(a) < 0 < f(b), there exists c in (a,b) with f(c) = 0.": [
+        "f is continuous on [a,b].",
+        "The Intermediate Value Theorem applies to f on [a,b].",
+        "There exists c in (a,b) with f(c) = 0.",
+    ],
+    "To find extrema, I need to find critical points. Since f is differentiable everywhere on (a,b), I can compute f'(x) and set it to zero.": [
+        "f is differentiable everywhere on (a,b).",
+        "Critical points can be found by setting f'(x) = 0.",
+    ],
+    # ── Demo 2: Experimental Protocol (safety violation) ──
+    "The palladium catalyst is air-sensitive and must be handled under inert atmosphere (N2 or Ar). Exposure to oxygen will deactivate it.": [
+        "The palladium catalyst is air-sensitive.",
+        "The catalyst must be handled under inert atmosphere.",
+        "Exposure to oxygen will deactivate the catalyst.",
+    ],
+    "Weigh 50mg of catalyst in the glovebox and transfer to the Schlenk flask under nitrogen.": [
+        "The catalyst is transferred under nitrogen atmosphere.",
+    ],
+    "Add the substrate and solvent. To ensure complete mixing, briefly open the flask to air to add the reagent via syringe.": [
+        "The flask is opened to air.",
+        "The reagent is added via syringe.",
+    ],
+    # ── Demo 3: Literature Synthesis (contradictory recommendation) ──
+    "Paper A (Chen et al. 2024) reports that compound X is a potent inhibitor of kinase Y, with IC50 = 12nM.": [
+        "Compound X inhibits kinase Y.",
+    ],
+    "Paper B (Zhang et al. 2025) shows that kinase Y is essential for activating pathway Z. Knockout of kinase Y abolishes pathway Z activity entirely.": [
+        "Kinase Y is essential for activating pathway Z.",
+        "Without kinase Y, pathway Z is abolished.",
+    ],
+    "Synthesizing these findings: since X inhibits Y, and Y is required for Z, compound X would impair pathway Z signaling.": [
+        "Compound X impairs pathway Z signaling.",
+        "X inhibits Y and Y is required for Z.",
+    ],
+    "Based on the literature, we recommend compound X as a potential enhancer of pathway Z for therapeutic applications.": [
+        "Compound X is recommended as an enhancer of pathway Z.",
+    ],
 }
 
 
@@ -110,16 +167,20 @@ def extract_beliefs(
     import time
 
     client = anthropic.Anthropic(api_key=key)
-    max_retries = 5
+    max_retries = 3
     for attempt in range(max_retries):
         try:
-            message = client.messages.create(
-                model="claude-sonnet-4-6",
+            text_parts = []
+            with client.messages.stream(
+                model=_get_model(),
                 max_tokens=1024,
+                temperature=0.0,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": step_text}],
-            )
-            text = message.content[0].text.strip()
+            ) as stream:
+                for chunk in stream.text_stream:
+                    text_parts.append(chunk)
+            text = "".join(text_parts).strip()
             # Handle markdown code fences
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -138,6 +199,102 @@ def extract_beliefs(
             logging.getLogger(__name__).warning("API error, retrying in %ds (%d/%d): %s", wait, attempt + 1, max_retries, e)
             time.sleep(wait)
     raise RuntimeError(f"Belief extraction failed after {max_retries} retries")
+
+
+BATCH_SYSTEM_PROMPT = (
+    "You are a belief and commitment extractor for epistemic closure analysis. "
+    "Given multiple numbered reasoning steps from an AI agent, extract from EACH step:\n"
+    "1. Every EXPLICIT belief the agent states.\n"
+    "2. Every INFERENTIAL COMMITMENT incurred by those assertions "
+    "(what logically follows, even if unsaid). When an agent asserts P and P entails Q, "
+    "the agent is committed to Q.\n\n"
+    "Return ONLY a JSON object mapping step indices to arrays of belief/commitment strings. "
+    "Each should be a complete declarative sentence. Include both explicit beliefs AND "
+    "immediate inferential commitments (one step of logical consequence)."
+)
+
+
+def extract_beliefs_batch(
+    steps: list[str],
+    *,
+    test_mode: bool = False,
+    api_key: Optional[str] = None,
+) -> list[list[str]]:
+    """Extract beliefs from multiple steps in a single API call.
+
+    Args:
+        steps: List of step text strings.
+        test_mode: If True, use hardcoded fixtures.
+        api_key: Anthropic API key.
+
+    Returns:
+        List of belief lists, one per step, in order.
+    """
+    if not steps:
+        return []
+
+    if test_mode:
+        return [_test_fixtures_lookup(s) for s in steps]
+
+    key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        return [_test_fixtures_lookup(s) for s in steps]
+
+    import anthropic
+    import logging
+    import time
+
+    client = anthropic.Anthropic(api_key=key)
+
+    # Build numbered steps
+    lines = []
+    for i, text in enumerate(steps):
+        lines.append(f"[{i}] {text}")
+    user_content = "\n".join(lines)
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            text_parts = []
+            with client.messages.stream(
+                model=_get_model(),
+                max_tokens=1024 * max(1, len(steps) // 3),
+                temperature=0.0,
+                system=BATCH_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_content}],
+            ) as stream:
+                for chunk in stream.text_stream:
+                    text_parts.append(chunk)
+            text = "".join(text_parts).strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+            parsed = json.loads(text)
+            if isinstance(parsed, dict):
+                results: list[list[str]] = []
+                for i in range(len(steps)):
+                    beliefs = parsed.get(str(i), parsed.get(i, []))
+                    if isinstance(beliefs, list) and all(isinstance(b, str) for b in beliefs):
+                        results.append(beliefs)
+                    else:
+                        results.append([])
+                return results
+
+            # Unexpected format, fall back to single calls
+            logging.getLogger(__name__).warning("Batch response not a dict, falling back")
+            return [extract_beliefs(s, api_key=key) for s in steps]
+
+        except json.JSONDecodeError:
+            logging.getLogger(__name__).warning("Failed to parse batch belief response")
+            return [extract_beliefs(s, api_key=key) for s in steps]
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError(f"Anthropic API authentication failed: {e}") from e
+        except (anthropic.RateLimitError, anthropic.APIConnectionError, anthropic.APIError) as e:
+            wait = min(2 ** (attempt + 1), 30)
+            logging.getLogger(__name__).warning("API error, retrying in %ds (%d/%d): %s", wait, attempt + 1, max_retries, e)
+            time.sleep(wait)
+
+    raise RuntimeError(f"Batch belief extraction failed after {max_retries} retries")
 
 
 def _test_fixtures_lookup(step_text: str) -> list[str]:

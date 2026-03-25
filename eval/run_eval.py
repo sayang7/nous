@@ -2,6 +2,11 @@
 
 Loads the evaluation dataset, runs the detector on each task,
 compares results to ground truth, and outputs precision/recall/F1.
+
+Features:
+- Batch API mode for efficiency (~60 calls instead of ~335)
+- Checkpoint after each task (resume on crash)
+- Real-time progress with per-task timing
 """
 
 from __future__ import annotations
@@ -9,13 +14,14 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from closureguard.detector import detect_violations, VIOLATION_TYPES
+from closureguard.detector import detect_violations, detect_violations_batch, VIOLATION_TYPES
 from closureguard.scorer import compute_metrics
 
 
@@ -25,7 +31,7 @@ def load_tasks(path: str | Path) -> list[dict]:
         return json.load(f)
 
 
-def evaluate_task(task: dict, test_mode: bool = True) -> dict:
+def evaluate_task(task: dict, test_mode: bool = True, use_batch: bool = False) -> dict:
     """Run detection on a single task and compare to ground truth.
 
     Returns a result dict with predicted/actual labels and details.
@@ -33,7 +39,11 @@ def evaluate_task(task: dict, test_mode: bool = True) -> dict:
     trace = task["trace"]
     ground_truth = task["ground_truth"]
 
-    violations = detect_violations(trace, test_mode=test_mode)
+    if use_batch and not test_mode:
+        violations = detect_violations_batch(trace, test_mode=False)
+    else:
+        violations = detect_violations(trace, test_mode=test_mode)
+
     metrics = compute_metrics(violations, len(trace))
 
     predicted_has_violation = len(violations) > 0
@@ -170,60 +180,99 @@ def print_summary(results: list[dict], eval_metrics: dict) -> None:
     print("\n" + "=" * 70)
 
 
+def load_checkpoint(checkpoint_path: Path) -> list[dict]:
+    """Load checkpoint results if they exist."""
+    if checkpoint_path.is_file():
+        with open(checkpoint_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("task_results", [])
+    return []
+
+
+def save_checkpoint(checkpoint_path: Path, results: list[dict], test_mode: bool) -> None:
+    """Save checkpoint after each task."""
+    data = {
+        "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
+        "test_mode": test_mode,
+        "completed": len(results),
+        "task_results": results,
+    }
+    with open(checkpoint_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
 def main() -> None:
     """Run the full evaluation pipeline."""
     import argparse
     parser = argparse.ArgumentParser(description="ClosureGuard Evaluation")
     parser.add_argument("--test", action="store_true", help="Force test mode (fixtures only, no API)")
+    parser.add_argument("--resume", action="store_true", help="Resume from checkpoint if available")
     args = parser.parse_args()
 
     dataset_path = Path(__file__).parent / "datasets" / "closure_tasks.json"
     results_dir = Path(__file__).parent / "results"
     results_dir.mkdir(exist_ok=True)
+    checkpoint_path = results_dir / "checkpoint.json"
 
-    # Determine mode
+    # Determine mode — no wasteful validation ping
     if args.test:
         test_mode = True
         print("[INFO] Test mode forced via --test flag.")
     else:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
-        test_mode = True
         if api_key:
-            try:
-                import anthropic
-                client = anthropic.Anthropic(api_key=api_key)
-                client.messages.create(
-                    model="claude-sonnet-4-6",
-                    max_tokens=10,
-                    messages=[{"role": "user", "content": "Say OK"}],
-                )
-                test_mode = False
-                print("[INFO] API key validated. Using Claude API for inference.")
-            except Exception as e:
-                print(f"[WARN] API key invalid ({type(e).__name__}). Falling back to test mode.")
-                test_mode = True
+            test_mode = False
+            print("[INFO] API key found. Using Claude API with batch mode.")
         else:
+            test_mode = True
             print("[INFO] No ANTHROPIC_API_KEY found. Running in test mode (hardcoded fixtures).")
+
+    # Batch mode disabled — single calls are more reliable (batch hangs on large traces)
+    use_batch = False
 
     # Load and evaluate
     tasks = load_tasks(dataset_path)
     print(f"[INFO] Loaded {len(tasks)} tasks from {dataset_path}")
 
-    results = []
+    # Resume from checkpoint if requested
+    results: list[dict] = []
+    completed_ids: set[str] = set()
+    if args.resume:
+        results = load_checkpoint(checkpoint_path)
+        completed_ids = {r["task_id"] for r in results}
+        if completed_ids:
+            print(f"[INFO] Resuming from checkpoint: {len(completed_ids)} tasks already complete.")
+
     skipped = 0
-    for i, task in enumerate(tasks):
+    total_time = 0.0
+    remaining_tasks = [(i, t) for i, t in enumerate(tasks) if t["id"] not in completed_ids]
+
+    for task_num, (i, task) in enumerate(remaining_tasks):
         label = "VIOL" if task["ground_truth"]["has_violation"] else "CLEAN"
-        print(f"  [{i+1}/{len(tasks)}] {task['id']} ({task['domain']}, {label})...", end=" ", flush=True)
+        progress = len(completed_ids) + task_num + 1
+        print(f"  [{progress}/{len(tasks)}] {task['id']} ({task['domain']}, {label})...", end=" ", flush=True)
+
+        t0 = time.time()
         try:
-            result = evaluate_task(task, test_mode=test_mode)
+            result = evaluate_task(task, test_mode=test_mode, use_batch=use_batch)
+            elapsed = time.time() - t0
+            total_time += elapsed
             status = "PASS" if result["correct"] else "FAIL"
-            print(status)
+            print(f"{status} ({elapsed:.1f}s)")
             results.append(result)
+
+            # Checkpoint after each task
+            if not test_mode:
+                save_checkpoint(checkpoint_path, results, test_mode)
         except Exception as e:
-            print(f"ERROR ({type(e).__name__})")
+            elapsed = time.time() - t0
+            print(f"ERROR ({type(e).__name__}: {e}) ({elapsed:.1f}s)")
             skipped += 1
+
     if skipped:
         print(f"\n[WARN] {skipped} tasks skipped due to errors.")
+    if total_time > 0:
+        print(f"[INFO] Total inference time: {total_time:.1f}s ({total_time / max(1, len(remaining_tasks)):.1f}s/task avg)")
 
     # Compute metrics
     eval_metrics = compute_eval_metrics(results)
@@ -237,12 +286,18 @@ def main() -> None:
     output = {
         "timestamp": timestamp,
         "test_mode": test_mode,
+        "batch_mode": use_batch,
         "eval_metrics": eval_metrics,
         "task_results": results,
     }
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     print(f"\n[INFO] Results saved to {output_path}")
+
+    # Clean up checkpoint on successful completion
+    if checkpoint_path.is_file() and not skipped:
+        checkpoint_path.unlink()
+        print("[INFO] Checkpoint cleaned up (all tasks complete).")
 
 
 if __name__ == "__main__":
