@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "closureguard"
+version = "0.1.0"
+description = "Formally-grounded detector for epistemic closure violations in LLM agent reasoning traces"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Sayan Gupta" },
+]
+keywords = ["llm", "epistemic-logic", "ai-safety", "agent-monitoring", "formal-verification"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "anthropic>=0.39.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sayangupta/ClosureGuard"
+Repository = "https://github.com/sayangupta/ClosureGuard"
+Issues = "https://github.com/sayangupta/ClosureGuard/issues"

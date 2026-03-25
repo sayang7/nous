@@ -3,6 +3,8 @@
 
   Each example constructs a concrete Kripke model and demonstrates
   either epistemic closure (coherent) or violation (incoherent).
+  Includes examples of all five violation types and the new
+  commitment-based and negative introspection results.
 -/
 
 import ClosureViolation
@@ -55,17 +57,12 @@ theorem coherent_knows_Q :
 -- Scenario: Agent knows "is_json" and "json → must_parse",
 -- but in the actual world, the action presupposes "¬must_parse"
 -- (string-splitting instead of JSON parsing).
---
--- The Kripke model forces must_parse to be true in all accessible
--- worlds, so any action contradicting it is incoherent.
 
-/-- In this model, "must_parse" holds everywhere the agent considers
-    possible. The action "string split" contradicts it. -/
+/-- Violation witness for the JSON parsing example.
+    Uses both the knowledge-based and commitment-based soundness. -/
 theorem modus_ponens_violation_example :
     ∃ (F : KripkeFrame) (v : EpistemicViolation F),
-      -- The violation witnesses that Q holds but action contradicts Q
       satisfies F v.M v.w v.Q ∧ v.actionContradictsQ := by
-  -- Construct the frame and violation
   refine ⟨coherentFrame, ?_, ?_⟩
   · exact {
       M := coherentModel
@@ -78,6 +75,23 @@ theorem modus_ponens_violation_example :
       h_action_contradicts := trivial
     }
   · exact violation_contradicts_known_truth coherentFrame _ trivial
+
+/-- The same violation, but using commitment soundness (no factivity needed). -/
+theorem modus_ponens_commitment_violation :
+    ∃ (F : KripkeFrame) (v : EpistemicViolation F),
+      satisfies F v.M v.w (.know v.Q) ∧ v.actionContradictsQ := by
+  refine ⟨coherentFrame, ?_, ?_⟩
+  · exact {
+      M := coherentModel
+      w := true
+      P := .atom "is_json"
+      Q := .atom "must_parse"
+      h_knows_P := coherent_knows_P
+      h_knows_PQ := coherent_knows_PQ
+      actionContradictsQ := True
+      h_action_contradicts := trivial
+    }
+  · exact violation_contradicts_commitment coherentFrame _
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -110,8 +124,7 @@ theorem revised_knows_deleted :
   simp [satisfies, revisedModel]
   simp_all [revisedFrame]
 
-/-- After revision, the agent does NOT know the file exists
-    (it's false in the actual world). -/
+/-- After revision, the agent does NOT know the file exists. -/
 theorem revised_not_knows_exists :
     ¬satisfies revisedFrame revisedModel false
       (.know (.atom "file_exists")) := by
@@ -124,17 +137,10 @@ theorem revised_not_knows_exists :
 -- EXAMPLE 4: Violation — BeliefRevisionFailure
 -- ═══════════════════════════════════════════════════════════════════
 --
--- Scenario: Agent's model SHOULD be `revisedFrame` (it learned
--- the file was deleted), but it acts as though "file_exists"
--- is still known — reading from a deleted file.
---
--- We model this as: the agent's *actual* epistemic state has
--- K(file_deleted), yet the action presupposes K(file_exists).
--- The formal guarantee: in the revised model, file_exists is
--- false at the actual world.
+-- The agent's model SHOULD be `revisedFrame` (it learned the file
+-- was deleted), but it acts as though "file_exists" is still known.
 
 theorem belief_revision_failure_example :
-    -- In the revised model, file_exists is false at the actual world
     ¬satisfies revisedFrame revisedModel false (.atom "file_exists") := by
   simp [satisfies, revisedModel]
 
@@ -142,11 +148,6 @@ theorem belief_revision_failure_example :
 -- ═══════════════════════════════════════════════════════════════════
 -- EXAMPLE 5: Coherent — Possibility Not Treated as Certainty
 -- ═══════════════════════════════════════════════════════════════════
---
--- Scenario: The agent considers it possible (◇) that induction
--- works, but correctly does NOT treat it as certain (□).
--- In the model, "induction_works" is true in some but not all
--- accessible worlds.
 
 def modalFrame : KripkeFrame where
   World := Fin 3      -- w0 = actual, w1 = induction works, w2 = it doesn't
@@ -170,20 +171,34 @@ theorem modal_not_knows_induction :
 -- ═══════════════════════════════════════════════════════════════════
 -- EXAMPLE 6: Violation — ModalScopeError
 -- ═══════════════════════════════════════════════════════════════════
---
--- The agent ACTS as though it knows induction works (skipping
--- other proof strategies), despite the model showing it doesn't.
--- The formal point: K(◇P) ≠ K(P). The detector catches this when
--- an agent moves from "might work" to "will work" without evidence.
 
 theorem modal_scope_error_example :
-    -- "induction_works" is true at the actual world (w0)...
     satisfies modalFrame modalModel ⟨0, by omega⟩ (.atom "induction_works") ∧
-    -- ...but the agent does NOT know it (it's not known)
     ¬satisfies modalFrame modalModel ⟨0, by omega⟩
       (.know (.atom "induction_works")) :=
   ⟨by simp [satisfies, modalModel],
    modal_not_knows_induction⟩
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- EXAMPLE 7: Negative Introspection
+-- ═══════════════════════════════════════════════════════════════════
+--
+-- In the modal frame (which is Euclidean since R is universal),
+-- the agent KNOWS it doesn't know induction_works.
+-- This demonstrates Axiom 5.
+
+/-- The universal relation is Euclidean. -/
+theorem modalFrame_euclidean : Euclidean modalFrame := by
+  intro _ _ _ _ _
+  exact trivial
+
+/-- The agent knows it doesn't know induction_works (Axiom 5). -/
+theorem knows_doesnt_know_induction :
+    satisfies modalFrame modalModel ⟨0, by omega⟩
+      (.know (.neg (.know (.atom "induction_works")))) :=
+  negative_introspection modalFrame modalModel ⟨0, by omega⟩
+    (.atom "induction_works") modalFrame_euclidean modal_not_knows_induction
 
 
 -- ═══════════════════════════════════════════════════════════════════
