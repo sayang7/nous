@@ -6,8 +6,8 @@ Tests the philosophical funnel:
 
 import pytest
 
-from closureguard.closure import compute_closure
-from closureguard.coherence import check_coherence, CoherenceResult
+from nous.closure import compute_closure
+from nous.coherence import check_coherence, CoherenceResult
 
 
 class TestCommitmentClosure:
@@ -155,7 +155,7 @@ class TestFullPipeline:
 
     def test_pipeline_detects_single_precise_violation(self):
         """The closure pipeline should find exactly one violation per incoherent trace."""
-        from closureguard import analyze_trace
+        from nous import analyze_trace
 
         trace = [
             {"step": 1, "text": "The API documentation confirms the endpoint returns JSON.",
@@ -172,7 +172,7 @@ class TestFullPipeline:
 
     def test_pipeline_clean_trace_no_violations(self):
         """Coherent traces should produce zero violations."""
-        from closureguard import analyze_trace
+        from nous import analyze_trace
 
         trace = [
             {"step": 1, "text": "The input n = 42 is an even number.",

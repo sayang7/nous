@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
 def _get_model() -> str:
-    return os.environ.get("CLOSUREGUARD_MODEL", DEFAULT_MODEL)
+    return os.environ.get("NOUS_MODEL", DEFAULT_MODEL)
 
 
 # Violation types — must match Lean taxonomy
@@ -500,11 +500,10 @@ def _test_coherence_lookup(commitments: list[str], action: str) -> CoherenceResu
                 return result
 
     # Check action-only keys (for coherent traces)
-    for key_action, _ in _TEST_COHERENCE:
-        if key_action == action:
-            result = _TEST_COHERENCE[(key_action, _)]
-            if result.coherent:
-                return result
+    for fixture_key, fixture_result in _TEST_COHERENCE.items():
+        fixture_action, fixture_commitment = fixture_key
+        if fixture_action == action and fixture_result.coherent:
+            return fixture_result
 
     # Default: coherent
     return CoherenceResult(coherent=True, confidence=0.5, explanation="No matching fixture")

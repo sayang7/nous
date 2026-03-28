@@ -3,16 +3,21 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "closureguard"
-version = "0.1.0"
-description = "Formally-grounded detector for epistemic closure violations in LLM agent reasoning traces"
+name = "nous-ai"
+version = "0.4.0"
+description = "Computational reasoning engine — makes thought inspectable, queryable, forkable, and comparable"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
     { name = "Sayan Gupta" },
 ]
-keywords = ["llm", "epistemic-logic", "ai-safety", "agent-monitoring", "formal-verification"]
+keywords = [
+    "reasoning", "epistemic-logic", "computational-reasoning",
+    "ai-safety", "formal-verification", "commitment-graph",
+    "proof-assistant", "reasoning-engine", "graph-of-thought",
+    "kripke-semantics", "belief-revision",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -20,18 +25,50 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 dependencies = [
     "anthropic>=0.39.0",
 ]
 
 [project.optional-dependencies]
+# Local entailment backend (free, no API costs)
+nli = [
+    "sentence-transformers>=2.2.0",
+]
+# OpenAI provider support
+openai = [
+    "openai>=1.0.0",
+]
+# Visualization (interactive graph + terminal rendering)
+viz = [
+    "pyvis>=0.3.0",
+    "rich>=13.0.0",
+]
 dev = [
+    "pytest>=8.0.0",
+    "pyvis>=0.3.0",
+    "rich>=13.0.0",
+]
+all = [
+    "sentence-transformers>=2.2.0",
+    "openai>=1.0.0",
+    "pyvis>=0.3.0",
+    "rich>=13.0.0",
     "pytest>=8.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/sayangupta/ClosureGuard"
-Repository = "https://github.com/sayangupta/ClosureGuard"
-Issues = "https://github.com/sayangupta/ClosureGuard/issues"
+Homepage = "https://github.com/sayangupta/nous"
+Repository = "https://github.com/sayangupta/nous"
+Documentation = "https://github.com/sayangupta/nous#readme"
+Issues = "https://github.com/sayangupta/nous/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nous"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

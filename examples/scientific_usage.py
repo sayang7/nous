@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ClosureGuard Scientific Usage Examples.
+"""Nous Scientific Usage Examples.
 
 Three demonstrations of epistemic closure violation detection
 in research-relevant scenarios. All examples run without an API key
@@ -15,7 +15,7 @@ from pathlib import Path
 # Add project root to path for development installs
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from closureguard import analyze_trace
+from nous import analyze_trace
 
 
 def print_report(title: str, trace: list[dict], report) -> None:
@@ -148,7 +148,7 @@ def demo_literature_synthesis():
 
 def main():
     print("\n" + "=" * 70)
-    print("  ClosureGuard: Scientific Usage Examples")
+    print("  Nous: Scientific Usage Examples")
     print("  Detecting epistemic closure violations in research AI traces")
     print("=" * 70)
 

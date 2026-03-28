@@ -23,9 +23,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from closureguard.extractor import extract_beliefs
-from closureguard.closure import compute_closure
-from closureguard.coherence import check_coherence, verify_violation, probe_violation_type, PROBE_PROMPTS
+from nous.extractor import extract_beliefs
+from nous.closure import compute_closure
+from nous.coherence import check_coherence, verify_violation, probe_violation_type, PROBE_PROMPTS
 
 
 # Violation types — must match Lean taxonomy exactly

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
 def _get_model() -> str:
-    return os.environ.get("CLOSUREGUARD_MODEL", DEFAULT_MODEL)
+    return os.environ.get("NOUS_MODEL", DEFAULT_MODEL)
 
 
 BASELINE_PROMPT = """\

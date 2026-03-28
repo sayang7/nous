@@ -10,11 +10,11 @@ import json
 import os
 from typing import Optional
 
-# Default model for API calls. Can be overridden via CLOSUREGUARD_MODEL env var.
+# Default model for API calls. Can be overridden via NOUS_MODEL env var.
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
 def _get_model() -> str:
-    return os.environ.get("CLOSUREGUARD_MODEL", DEFAULT_MODEL)
+    return os.environ.get("NOUS_MODEL", DEFAULT_MODEL)
 
 SYSTEM_PROMPT = (
     "You are a belief and commitment extractor for epistemic closure analysis. "

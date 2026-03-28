@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from closureguard.detector import detect_violations, CONFIDENCE_THRESHOLD, REVIEW_THRESHOLD
+from nous.detector import detect_violations, CONFIDENCE_THRESHOLD, REVIEW_THRESHOLD
 
 FAILED_TASK_IDS = ["task_007", "task_015", "task_017", "task_021", "task_028", "task_029"]
 

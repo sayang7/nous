@@ -20,8 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from closureguard.baseline import baseline_detect
-from closureguard.detector import VIOLATION_TYPES
+from nous.baseline import baseline_detect
+from nous.detector import VIOLATION_TYPES
 
 
 def load_tasks(path: str | Path) -> list[dict]:
@@ -147,7 +147,7 @@ def print_comparison(baseline_metrics: dict, pipeline_metrics: dict | None) -> N
 
 def main() -> None:
     import argparse
-    parser = argparse.ArgumentParser(description="ClosureGuard Baseline Evaluation")
+    parser = argparse.ArgumentParser(description="Nous Baseline Evaluation")
     parser.add_argument("--compare", type=str, help="Path to pipeline eval results JSON for comparison")
     args = parser.parse_args()
 
