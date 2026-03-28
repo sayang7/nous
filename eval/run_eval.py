@@ -1,4 +1,4 @@
-"""ClosureGuard Evaluation Runner.
+"""Nous Evaluation Runner.
 
 Loads the evaluation dataset, runs the detector on each task,
 compares results to ground truth, and outputs precision/recall/F1.
@@ -21,8 +21,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from closureguard.detector import detect_violations, detect_violations_batch, VIOLATION_TYPES
-from closureguard.scorer import compute_metrics
+from nous.detector import detect_violations, detect_violations_batch, VIOLATION_TYPES
+from nous.scorer import compute_metrics
 
 
 def load_tasks(path: str | Path) -> list[dict]:
@@ -143,7 +143,7 @@ def compute_eval_metrics(results: list[dict]) -> dict:
 def print_summary(results: list[dict], eval_metrics: dict) -> None:
     """Print a clean summary table to stdout."""
     print("\n" + "=" * 70)
-    print("  ClosureGuard Evaluation Results")
+    print("  Nous Evaluation Results")
     print("=" * 70)
 
     # Per-task results
@@ -204,7 +204,7 @@ def save_checkpoint(checkpoint_path: Path, results: list[dict], test_mode: bool)
 def main() -> None:
     """Run the full evaluation pipeline."""
     import argparse
-    parser = argparse.ArgumentParser(description="ClosureGuard Evaluation")
+    parser = argparse.ArgumentParser(description="Nous Evaluation")
     parser.add_argument("--test", action="store_true", help="Force test mode (fixtures only, no API)")
     parser.add_argument("--resume", action="store_true", help="Resume from checkpoint if available")
     args = parser.parse_args()

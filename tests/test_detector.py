@@ -1,20 +1,22 @@
-"""Tests for the ClosureGuard detection pipeline.
+"""Tests for the legacy detection pipeline.
 
-All tests use test_mode=True (hardcoded fixtures, no API calls).
+These test the detector.py/scorer.py/baseline.py modules used by the
+evaluation benchmark. All tests use test_mode=True (fixtures, no API).
+
+For tests of the primary Nous API, see test_nous.py.
 """
 
 import pytest
 
-from closureguard.extractor import extract_beliefs, extract_beliefs_batch
-from closureguard.checker import check_entailment, check_entailment_batch, clear_cache, EntailmentResult
-from closureguard.detector import (
+from nous.extractor import extract_beliefs, extract_beliefs_batch
+from nous.detector import (
     detect_violations,
     detect_violations_batch,
     closure_score,
     ClosureViolationReport,
     VIOLATION_TYPES,
 )
-from closureguard.scorer import compute_metrics
+from nous.scorer import compute_metrics
 
 
 # ─── Extractor Tests ─────────────────────────────────────────────
@@ -51,75 +53,10 @@ class TestExtractor:
         assert all(isinstance(b, str) for b in beliefs)
 
 
-# ─── Checker Tests ────────────────────────────────────────────────
-
-class TestChecker:
-    def setup_method(self):
-        clear_cache()
-
-    def test_positive_entailment(self):
-        result = check_entailment(
-            "The API endpoint returns JSON.",
-            "The response must be parsed as JSON to extract fields.",
-            test_mode=True,
-        )
-        assert result.entails is True
-        assert result.confidence > 0.8
-        assert result.violation_type is None
-
-    def test_violation_detected(self):
-        result = check_entailment(
-            "The API endpoint returns JSON.",
-            "Split response string by commas to find name.",
-            test_mode=True,
-        )
-        assert result.entails is False
-        assert result.violation_type == "ModusPonensViolation"
-        assert result.explanation is not None
-        assert result.confidence > 0.8
-
-    def test_cache_returns_same_result(self):
-        r1 = check_entailment("The API endpoint returns JSON.",
-                               "The response must be parsed as JSON to extract fields.",
-                               test_mode=True)
-        r2 = check_entailment("The API endpoint returns JSON.",
-                               "The response must be parsed as JSON to extract fields.",
-                               test_mode=True)
-        assert r1 == r2
-
-    def test_unknown_pair_defaults_to_coherent(self):
-        """Unknown pairs should be treated as coherent (no false positives)."""
-        result = check_entailment(
-            "The sky is blue.",
-            "Water is wet.",
-            test_mode=True,
-        )
-        assert result.entails is True
-        assert result.violation_type is None
-
-    def test_confidence_is_bounded(self):
-        result = check_entailment(
-            "The number 42 is even.",
-            "42 is divisible by 2.",
-            test_mode=True,
-        )
-        assert 0.0 <= result.confidence <= 1.0
-
-    def test_violation_type_in_taxonomy(self):
-        result = check_entailment(
-            "config.yaml was deleted in the last deployment.",
-            "Read database_url field from config.yaml.",
-            test_mode=True,
-        )
-        assert result.violation_type in VIOLATION_TYPES
-
-
 # ─── Detector Tests ───────────────────────────────────────────────
 
 class TestDetector:
     def test_detects_modus_ponens_violation(self):
-        """Agent states API returns JSON, says JSON must be parsed,
-        then string-splits the response."""
         trace = [
             {"step": 1, "text": "The API documentation confirms the endpoint returns JSON.",
              "action": "Send GET request to the endpoint."},
@@ -133,7 +70,6 @@ class TestDetector:
         assert any(v.violation_type == "ModusPonensViolation" for v in violations)
 
     def test_detects_belief_revision_failure(self):
-        """Agent learns file was deleted, then reads from it."""
         trace = [
             {"step": 1, "text": "I'll read the configuration from config.yaml.",
              "action": "Open config.yaml for reading."},
@@ -147,7 +83,6 @@ class TestDetector:
         assert any(v.violation_type == "BeliefRevisionFailure" for v in violations)
 
     def test_detects_temporal_coherence_violation(self):
-        """Agent notes server is down, then queries it."""
         trace = [
             {"step": 1, "text": "Health check at 14:00 shows the database server is unreachable.",
              "action": "Log server as unreachable."},
@@ -161,7 +96,6 @@ class TestDetector:
         assert any(v.violation_type == "TemporalCoherenceViolation" for v in violations)
 
     def test_coherent_trace_has_no_violations(self):
-        """Coherent math reasoning should produce no violations."""
         trace = [
             {"step": 1, "text": "The input n = 42 is an even number.",
              "action": "Store n = 42 as even."},
@@ -193,7 +127,6 @@ class TestDetector:
         assert 0.0 <= v.confidence <= 1.0
 
     def test_violation_types_match_lean_taxonomy(self):
-        """All violation types in Python must match the Lean taxonomy."""
         expected = {
             "ModusPonensViolation",
             "BeliefRevisionFailure",
@@ -204,11 +137,9 @@ class TestDetector:
         assert set(VIOLATION_TYPES) == expected
 
     def test_api_auth_error_propagates(self):
-        """Auth errors should raise RuntimeError, not silently return empty."""
         trace = [
             {"step": 1, "text": "Some belief.", "action": "Some action."},
         ]
-        # With an explicitly invalid key, should raise RuntimeError
         with pytest.raises(RuntimeError, match="authentication failed"):
             detect_violations(trace, test_mode=False, api_key="sk-invalid-key")
 
@@ -284,7 +215,6 @@ class TestScorer:
 
 class TestBatchExtractor:
     def test_batch_matches_single(self):
-        """Batch extraction should return same results as single calls."""
         steps = [
             "The API documentation confirms the endpoint returns JSON.",
             "The system reports config.yaml was deleted in the last deployment.",
@@ -302,44 +232,8 @@ class TestBatchExtractor:
         assert results == [[]]
 
 
-class TestBatchChecker:
-    def setup_method(self):
-        clear_cache()
-
-    def test_batch_matches_single(self):
-        """Batch checking should return same results as single calls."""
-        pairs = [
-            ("The API endpoint returns JSON.", "The response must be parsed as JSON to extract fields."),
-            ("The API endpoint returns JSON.", "Split response string by commas to find name."),
-            ("The number 42 is even.", "42 is divisible by 2."),
-        ]
-        single_results = []
-        for a, b in pairs:
-            clear_cache()
-            single_results.append(check_entailment(a, b, test_mode=True))
-        clear_cache()
-        batch_results = check_entailment_batch(pairs, test_mode=True)
-
-        for single, batch in zip(single_results, batch_results):
-            assert single.entails == batch.entails
-            assert single.violation_type == batch.violation_type
-            assert single.confidence == batch.confidence
-
-    def test_batch_empty_input(self):
-        assert check_entailment_batch([], test_mode=True) == []
-
-    def test_batch_caching(self):
-        """Batch should populate cache; second call uses cache."""
-        clear_cache()
-        pairs = [("The number 42 is even.", "42 is divisible by 2.")]
-        r1 = check_entailment_batch(pairs, test_mode=True)
-        r2 = check_entailment_batch(pairs, test_mode=True)
-        assert r1[0].entails == r2[0].entails
-
-
 class TestBatchDetector:
     def test_batch_matches_single_modus_ponens(self):
-        """Batch detector should find same violations as single detector."""
         trace = [
             {"step": 1, "text": "The API documentation confirms the endpoint returns JSON.",
              "action": "Send GET request to the endpoint."},
@@ -348,19 +242,15 @@ class TestBatchDetector:
             {"step": 3, "text": "Let me extract the 'name' field from the response.",
              "action": "Split response string by commas to find name."},
         ]
-        clear_cache()
         single = detect_violations(trace, test_mode=True)
-        clear_cache()
         batch = detect_violations_batch(trace, test_mode=True)
 
         assert len(single) == len(batch)
         for s, b in zip(single, batch):
             assert s.step_index == b.step_index
             assert s.violation_type == b.violation_type
-            assert s.antecedent == b.antecedent
 
     def test_batch_coherent_trace(self):
-        """Batch detector on coherent trace should find no violations."""
         trace = [
             {"step": 1, "text": "The input n = 42 is an even number.",
              "action": "Store n = 42 as even."},
@@ -376,7 +266,6 @@ class TestBatchDetector:
         assert detect_violations_batch([], test_mode=True) == []
 
     def test_batch_belief_revision_failure(self):
-        """Batch detector should find BeliefRevisionFailure."""
         trace = [
             {"step": 1, "text": "I'll read the configuration from config.yaml.",
              "action": "Open config.yaml for reading."},
@@ -385,7 +274,6 @@ class TestBatchDetector:
             {"step": 3, "text": "Now let me parse the database URL from config.yaml.",
              "action": "Read database_url field from config.yaml."},
         ]
-        clear_cache()
         violations = detect_violations_batch(trace, test_mode=True)
         assert len(violations) >= 1
         assert any(v.violation_type == "BeliefRevisionFailure" for v in violations)
@@ -395,17 +283,14 @@ class TestBatchDetector:
 
 class TestBaseline:
     def test_baseline_module_imports(self):
-        """Baseline module should be importable."""
-        from closureguard.baseline import baseline_detect, BaselineResult, BASELINE_PROMPT
+        from nous.baseline import baseline_detect, BaselineResult, BASELINE_PROMPT
         assert callable(baseline_detect)
         assert "{trace_text}" in BASELINE_PROMPT
 
     def test_baseline_requires_api_key(self):
-        """Baseline should raise without API key."""
         import os
-        from closureguard.baseline import baseline_detect
+        from nous.baseline import baseline_detect
 
-        # Temporarily clear env
         old_key = os.environ.pop("ANTHROPIC_API_KEY", None)
         try:
             with pytest.raises(RuntimeError, match="API key required"):

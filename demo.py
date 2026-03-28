@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ClosureGuard Interactive Demo.
+"""Nous Interactive Demo.
 
 Paste any agent reasoning trace and see violations detected in real-time.
 Works without an API key (test mode) or with ANTHROPIC_API_KEY for arbitrary traces.
@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from closureguard import analyze_trace
+from nous import Nous, analyze_trace
 
 
 EXAMPLES = {
@@ -89,7 +89,7 @@ def run_example(name):
 
 def run_interactive():
     """Run interactive mode: user pastes JSON trace."""
-    print_colored("\n  ClosureGuard Interactive Demo", "bold")
+    print_colored("\n  Nous Interactive Demo", "bold")
     print("  Paste a JSON trace (list of {text, action} dicts) or type 'example' for demos.\n")
 
     import os
@@ -144,7 +144,7 @@ def run_interactive():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="ClosureGuard Interactive Demo")
+    parser = argparse.ArgumentParser(description="Nous Interactive Demo")
     parser.add_argument("--example", choices=["math", "chem", "drug", "all"],
                         help="Run a built-in example")
     args = parser.parse_args()

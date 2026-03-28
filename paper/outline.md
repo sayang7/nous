@@ -78,7 +78,7 @@ LLM agents increasingly reason step-by-step before acting, yet no existing tool 
 - First formally-grounded detector for epistemic closure violations in LLM agents
 - Lean 4 proofs establish soundness, Python pipeline operationalizes detection
 - Higher precision than naive baseline, with interpretable and auditable output
-- Open-source: pip install closureguard
+- Open-source: pip install nous-ai
 
 ### Appendices
 

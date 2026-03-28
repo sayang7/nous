@@ -1,6 +1,6 @@
 """Commitment Closure Operator.
 
-This is the philosophical core of ClosureGuard.
+This is the philosophical core of Nous.
 
 Given a set of explicit assertions {P1, P2, ...}, the commitment closure
 C({P1,...}) is the set of all propositions the agent is normatively bound
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
 def _get_model() -> str:
-    return os.environ.get("CLOSUREGUARD_MODEL", DEFAULT_MODEL)
+    return os.environ.get("NOUS_MODEL", DEFAULT_MODEL)
 
 
 CLOSURE_PROMPT = """\

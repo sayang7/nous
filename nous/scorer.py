@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 
-from closureguard.detector import ClosureViolationReport
+from nous.detector import ClosureViolationReport
 
 
 @dataclass
