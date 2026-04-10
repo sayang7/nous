@@ -1,4 +1,4 @@
-"""Anthropic (Claude) provider for belief extraction and reasoning."""
+"""Google Gemini provider for belief extraction and reasoning."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Optional
 
-from nous.extractor import SYSTEM_PROMPT, extract_beliefs, _test_fixtures_lookup
+from nous.extractor import SYSTEM_PROMPT, _test_fixtures_lookup
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ that tension is the point
 """
 
 
-class AnthropicProvider:
-    """Extract beliefs and generate reasoning using Claude API."""
+class GeminiProvider:
+    """Extract beliefs and generate reasoning using Google Gemini API."""
 
     def __init__(
         self,
@@ -45,16 +45,52 @@ class AnthropicProvider:
         model: Optional[str] = None,
     ):
         self.api_key = api_key
-        self.model = model
+        self.model = model or "gemini-1.5-flash"
+
+    def _get_client(self):
+        try:
+            import google.generativeai as genai
+        except ImportError:
+            raise ImportError(
+                "GeminiProvider requires google-generativeai. "
+                "Install with: pip install google-generativeai"
+            )
+        genai.configure(api_key=self.api_key)
+        return genai
 
     def extract(self, text: str) -> list[str]:
-        """Extract beliefs from text using Claude."""
+        """Extract beliefs from text using Gemini."""
         if not self.api_key:
             return _test_fixtures_lookup(text)
-        return extract_beliefs(text, api_key=self.api_key)
+
+        genai = self._get_client()
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=self.model,
+                system_instruction=SYSTEM_PROMPT,
+            )
+            response = model.generate_content(
+                text,
+                generation_config={"temperature": 0.0, "max_output_tokens": 1024},
+            )
+            content = response.text.strip()
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            beliefs = json.loads(content)
+            if isinstance(beliefs, list) and all(isinstance(b, str) for b in beliefs):
+                return beliefs
+            logger.warning("Gemini extract() returned non-list: %s", content[:100])
+            return []
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse Gemini extract() response as JSON")
+            return []
+        except Exception as e:
+            logger.warning("Gemini extraction failed: %s", e)
+            return []
 
     def reason(self, problem: str) -> list[dict]:
-        """Send a problem to Claude and return structured reasoning steps.
+        """Send a problem to Gemini and return structured reasoning steps.
 
         Args:
             problem: The question or problem to reason about.
@@ -63,27 +99,20 @@ class AnthropicProvider:
             List of {text, action} dicts representing reasoning steps.
         """
         if not self.api_key:
-            raise RuntimeError("API key required for reason(). Set ANTHROPIC_API_KEY.")
+            raise RuntimeError("API key required for reason(). Set GEMINI_API_KEY.")
+
+        genai = self._get_client()
 
         try:
-            import anthropic
-        except ImportError:
-            raise ImportError("anthropic package required. Install with: pip install anthropic")
-
-        import os
-        model = self.model or os.environ.get("NOUS_MODEL", "claude-sonnet-4-6")
-        client = anthropic.Anthropic(api_key=self.api_key)
-
-        try:
-            message = client.messages.create(
-                model=model,
-                max_tokens=2048,
-                temperature=0.7,
-                system=REASON_PROMPT,
-                messages=[{"role": "user", "content": problem}],
+            model = genai.GenerativeModel(
+                model_name=self.model,
+                system_instruction=REASON_PROMPT,
             )
-            content = message.content[0].text.strip()
-            # Strip markdown fences if present
+            response = model.generate_content(
+                problem,
+                generation_config={"temperature": 0.7, "max_output_tokens": 2048},
+            )
+            content = response.text.strip()
             if content.startswith("```"):
                 content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             steps = json.loads(content)
@@ -93,11 +122,11 @@ class AnthropicProvider:
                     for s in steps
                     if isinstance(s, dict)
                 ]
-            logger.warning("Claude reason() returned non-list: %s", content[:100])
+            logger.warning("Gemini reason() returned non-list: %s", content[:100])
             return []
         except json.JSONDecodeError:
-            logger.warning("Failed to parse Claude reason() response as JSON")
+            logger.warning("Failed to parse Gemini reason() response as JSON")
             return []
         except Exception as e:
-            logger.warning("Claude reason() failed: %s", e)
+            logger.warning("Gemini reason() failed: %s", e)
             raise

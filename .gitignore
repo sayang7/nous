@@ -19,3 +19,10 @@ build/
 dist/
 *.egg-info/
 .gstack/
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/tsconfig.*.tsbuildinfo
+# Streamlit
+.streamlit/

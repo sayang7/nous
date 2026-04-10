@@ -1,69 +1,34 @@
-<p align="center">
-  <h1 align="center">Nous (νοῦς)</h1>
-  <p align="center"><strong>Computational Reasoning Engine.<br>Makes thought inspectable, queryable, forkable, and comparable.</strong></p>
-</p>
+<div align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Aristotle_Altemps_Inv8575.jpg/200px-Aristotle_Altemps_Inv8575.jpg" alt="Aristotle" width="120" style="border-radius:8px; margin-bottom:16px;">
 
-<p align="center">
-  <a href="#the-idea">The Idea</a> &bull;
-  <a href="#quick-start">Quick Start</a> &bull;
-  <a href="#what-you-can-do">Capabilities</a> &bull;
-  <a href="#why-this-is-new">Why New</a> &bull;
-  <a href="#architecture">Architecture</a> &bull;
-  <a href="#lean-4-proofs">Lean 4 Proofs</a>
-</p>
+  <h1>Nous <sub>νοῦς</sub></h1>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/lean-4.16.0-orange.svg" alt="Lean 4">
-  <img src="https://img.shields.io/badge/tests-98%20passed-brightgreen.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
-</p>
+  <p><strong>Formal reasoning integrity for AI agents.<br>
+  Catches when an agent's actions contradict the logical consequences of its own stated beliefs.</strong></p>
+
+  <p>
+    <a href="https://github.com/sayang7/nous/actions/workflows/test.yml">
+      <img src="https://github.com/sayang7/nous/actions/workflows/test.yml/badge.svg?branch=master" alt="Tests">
+    </a>
+    <img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+">
+    <img src="https://img.shields.io/badge/lean-4.16.0-orange.svg" alt="Lean 4">
+    <img src="https://img.shields.io/badge/F1-0.842-brightgreen.svg" alt="F1 Score">
+    <img src="https://img.shields.io/badge/precision-0.889-brightgreen.svg" alt="Precision">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
+  </p>
+</div>
 
 ---
 
-## The Idea
+## The Problem
 
-When a researcher uses AI to reason through a hard problem — a proof, a hypothesis, a protocol — the reasoning is just text. You can't see its structure, can't query its assumptions, can't fork it to explore alternatives, can't compare two approaches, can't find what's missing.
+An AI agent says *"the catalyst is air-sensitive"* then opens the flask to air. No existing tool catches this.
 
-**Nous makes reasoning into a computational object.**
+It isn't a hallucination — the agent never claims the flask is safe. It isn't self-contradiction — neither statement says anything about the other. It is a **belief-action gap**: the agent held a commitment (`air-sensitive → stay under nitrogen`) and acted against it without retracting the commitment first.
 
-Like databases made text queryable. Like git made code branchable. Nous makes thought inspectable, queryable, forkable, and comparable.
+Formally: `K(P) ∧ K(P → Q) ∧ act(¬Q)`.
 
-```python
-from nous import Nous
-
-n = Nous()
-
-# Feed it reasoning (any source — human, AI, mixed)
-n.step("f is continuous on [a,b]", "Apply IVT")
-n.step("By IVT, root exists in (a,b)", "Find root")
-
-# SEE the structure
-n.state().assumptions()     # What's asserted without proof
-n.state().derived()         # What follows from assertions
-n.state().depends_on("root exists")  # Trace back to foundations
-
-# QUERY the structure
-n.state().gaps_to("f is differentiable")  # What's missing to reach this?
-n.state().circular()        # Any circular reasoning?
-n.state().weakest_link()    # Which commitment has least support?
-
-# MANIPULATE the structure
-with n.suppose("f is differentiable"):
-    print(n.state().derived())        # See consequences
-    print(n.state().circular())       # Any problems?
-# Auto-rolled back — original state preserved
-
-# COMPARE structures
-diff = n.diff(other_nous)  # How do two reasoning paths differ?
-
-# VERIFY the structure
-r = n.step("Since f is differentiable...", "Find extrema")
-r.coherent          # False — differentiability never proven
-r.violation          # Exact path showing the gap
-```
-
-**3 methods at core:** `step()`, `state()`, `closure()`. Everything else is a query on the graph.
+Nous detects this. SelfCheckGPT needs ground truth. Contradiction detectors find `P ∧ ¬P`. Nous finds the hidden violation where an agent's *action* breaks the logical closure of its *own stated beliefs*.
 
 ---
 
@@ -73,133 +38,183 @@ r.violation          # Exact path showing the gap
 pip install git+https://github.com/sayang7/nous
 ```
 
-> PyPI release coming after ArXiv submission. Use the git install above for now.
+```python
+from nous import Nous
 
-### Detect a violation
+n = Nous()
+n.step("The catalyst is air-sensitive. Exposure to oxygen deactivates it.", "Note requirement.")
+n.step("Transfer catalyst under nitrogen.", "Transfer catalyst.")
+r = n.step("Open flask to air to add reagent.", "Add reagent.")
+
+print(r.coherent)   # False
+print(r.violation)  # {'type': 'ModusPonensViolation', 'chain': [...]}
+```
+
+No API key needed for development:
+
+```bash
+NOUS_TEST_MODE=true python examples/scientific_usage.py
+```
+
+> PyPI release follows ArXiv submission. Use the git install for now.
+
+---
+
+## How It Works
+
+Nous runs a four-phase pipeline on every agent step:
+
+```
+ Agent reasoning trace
+         │
+         ▼
+ ┌─────────────────┐
+ │  1. EXTRACT     │  Pull explicit commitments from natural language
+ │  Extractor      │  "air-sensitive" → C("catalyst requires inert atmosphere")
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │  2. CLOSE       │  Compute deductive closure of all commitments so far
+ │  CommitmentGraph│  C(P) ∧ C(P→Q) ⟹ C(Q)   [Axiom K, Kripke 1963]
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │  3. VERIFY      │  Is this action coherent with the closure?
+ │  Coherence      │  act("open flask") ⊬ closure → VIOLATION
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │  4. CLASSIFY    │  Which violation type? Which commitment chain broke?
+ │  Detector       │  ModusPonensViolation at step 3, confidence 0.97
+ └─────────────────┘
+```
+
+The commitment graph is the core data structure. Every query — assumptions, dependencies, cycles, gaps — is a graph traversal. O(V+E), no LLM needed for structure.
+
+---
+
+## Violation Taxonomy
+
+Five types, each grounded in a specific tradition of formal logic with Lean 4 soundness proofs:
+
+| ID | Type | Philosopher | What It Catches | Lean Theorem |
+|----|------|-------------|-----------------|--------------|
+| GT-01 | `ModusPonensViolation` | Hintikka (1962) — Axiom K | Agent commits to P and P→Q, acts as ¬Q | `modusPonensSound` |
+| GT-02 | `BeliefRevisionFailure` | AGM (1985) | New evidence received, contradicted prior belief persists | `beliefRevisionSound` |
+| GT-03 | `ModalScopeError` | Kripke (1963) | Necessity (□) treated as possibility (◇) or vice versa | `modalScopeSound` |
+| GT-04 | `TemporalCoherenceViolation` | Prior (1967) | Belief from time T₁ applied at T₂ without revalidation | `temporalCoherenceSound`* |
+| GT-05 | `ReferentialOpacityFailure` | Frege (1892) | Co-referential substitution inside a belief context | LLM-only (undecidable) |
+
+*One `sorry` remains in the temporal proof. See [`theory/README.md`](theory/README.md) for details.
+
+The proofs establish soundness of the *abstract framework* — every detected violation is a genuine breach of inferential commitment. They do not certify the Python detector's recall. See [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) for the honest account of what the formal guarantees do and do not cover.
+
+---
+
+## Benchmark
+
+Evaluated on 40 annotated agent traces across 5 domains (chemistry, code, medicine, law, math):
+
+| Metric | Nous Pipeline | Keyword Baseline |
+|--------|:---:|:---:|
+| **Precision** | **0.889** | 0.864 |
+| Recall | 0.800 | 0.950 |
+| F1 | 0.842 | 0.905 |
+| False Positives | **2** | 3 |
+
+The pipeline trades recall for precision. For a monitoring tool, false alarms are more damaging than missed detections — a noisy monitor gets ignored. `ModusPonensViolation` is detected perfectly (6/6); the main recall gap is in temporal and modal types where the commitment closure needs temporal indexing (tracked in [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md)).
+
+Reproduce: `bash scripts/reproduce_table1.sh`
+
+---
+
+## Related Work
+
+**Self-contradiction detection** (Mundler et al., ICLR 2024) finds cases where an agent asserts `P ∧ ¬P`. Nous detects the harder case: `P` and `P→Q` are both asserted, but the agent acts as if `¬Q`. No contradiction between any two statements — the violation only appears when you compute the closure.
+
+**SelfCheckGPT** and **Semantic Entropy** (Kuhn et al., NeurIPS 2023) detect hallucinations by comparing multiple samples against ground truth or each other. Nous requires neither ground truth nor multiple samples — it checks the agent's trace against itself.
+
+**InferAct** (Fang et al., EMNLP 2025) and **ShieldAgent** (Chen et al., ICML 2025) use safety constraints and policy specifications. Nous uses no predefined policy — violations emerge from the agent's own stated commitments.
+
+---
+
+## API Reference
 
 ```python
 from nous import Nous
 
 n = Nous()
-n.step("The catalyst is air-sensitive. Exposure to oxygen deactivates it.",
-       "Note requirements.")
-n.step("Transfer catalyst under nitrogen.",
-       "Transfer catalyst.")
-r = n.step("Open flask to air to add reagent.",
-           "Add reagent.")
 
-print(r)            # Step 3: INCOHERENT — ModusPonensViolation
-print(r.coherent)   # False
-print(r.violation)  # {'type': 'ModusPonensViolation', 'chain': '...', ...}
+# Core: feed reasoning + action, get back coherence result
+result = n.step("reasoning text", "action taken")
+result.coherent     # bool
+result.violation    # dict with type, chain, confidence — or None
 
-if not r:           # StepResult is falsy when incoherent
-    print("Reasoning broke down!")
-```
-
-### Visualize the graph
-
-```python
-n.show()            # Opens interactive Pyvis graph in browser
-                    # Violations glow red. Nodes are draggable.
-
-# In Jupyter notebooks, just display the object:
-n                   # Renders inline HTML automatically via _repr_html_()
-```
-
-### Audit the trace
-
-```python
-for entry in n.trace():
-    print(entry)
-# [step 1] >>> Processing: The catalyst is air-sensitive...
-# [step 1]   + 2 commitment(s) extracted
-# [step 1]   = Closure: 3 commitments
-# [step 1]   ✓ Step coherent
-# [step 3]   ✗ VIOLATION: ModusPonensViolation — ...
-```
-
-### Measure reasoning strength
-
-```python
+# Query the commitment graph
 s = n.state()
-print(s.summary())   # [INCOHERENT] 5 assumptions, 2 derived, 3 edges, 1 violation(s), strength=70%
-print(s.strength())  # 0.7  (0-1 score combining coverage, confidence, cycles, violations)
+s.assumptions()             # beliefs asserted without proof
+s.derived()                 # what follows from assertions
+s.depends_on("claim")       # trace a claim back to its foundations
+s.gaps_to("goal")           # what's missing to reach this conclusion
+s.circular()                # cycles in the commitment graph
+s.weakest_link()            # least-supported commitment
+s.strength()                # 0–1 composite score
+s.summary()                 # human-readable one-liner
+
+# Hypotheticals (context-managed, auto-rolled-back)
+with n.suppose("f is differentiable"):
+    print(n.state().derived())  # what would follow
+
+# Compare two reasoning paths
+diff = n.diff(other_nous)
+diff.only_in_left   # commitments unique to this path
+diff.only_in_right  # commitments unique to the other path
+diff.shared         # what both agree on
+
+# Visualize
+n.show()            # interactive Pyvis graph in browser
 ```
 
-### Explore hypotheticals
+### Entailment Backends
+
+| Backend | Cost | Speed | Notes |
+|---------|------|-------|-------|
+| `anthropic` (default) | ~$0.001/step | ~500ms | Claude, temperature=0 |
+| `openai` | ~$0.001/step | ~400ms | GPT-4o |
+| `nli` | Free | ~50ms | Local sentence-transformers, no API key |
+| `test` | Free | <1ms | Deterministic fixtures for CI |
 
 ```python
+n = Nous(backend="nli")     # free local model
+n = Nous(provider="openai") # GPT-4o
+```
+
+---
+
+## Integration
+
+```python
+# Any agent loop
+from nous import Nous
+
 n = Nous()
-n.step("All known metals conduct electricity.", "Record property.")
+for step in agent.run():
+    r = n.step(step.reasoning, step.action)
+    if not r:
+        agent.halt(reason=r.violation)
 
-with n.suppose("Suppose we discover a non-conducting metal"):
-    # What would the consequences be?
-    s = n.state()
-    print(s.assumptions())  # Includes the hypothetical
-    # Original state preserved after exiting
+# LangChain
+from nous.integrations.langchain import NousCallback
+
+agent = AgentExecutor(
+    agent=...,
+    tools=...,
+    callbacks=[NousCallback(on_violation="halt")]
+)
 ```
-
-### Compare two reasoning paths
-
-```python
-approach_a = Nous()
-approach_a.step("Use binary search", "Search")
-approach_a.step("Array must be sorted", "Verify precondition")
-
-approach_b = Nous()
-approach_b.step("Use linear scan", "Search")
-approach_b.step("Works on any array", "No precondition needed")
-
-diff = approach_a.diff(approach_b)
-print(diff.only_in_left)   # Commitments unique to approach A
-print(diff.only_in_right)  # Commitments unique to approach B
-print(diff.shared)          # What both approaches agree on
-```
-
-### Free core (no API needed)
-
-The graph algorithms — assumptions, derived, depends_on, circular, weakest_link, suppose, diff, strength — are pure computation. No LLM calls. The only part that needs an API is extracting beliefs from natural language.
-
-```python
-n = Nous(backend="nli")  # Free local NLI model for entailment
-# Or use test_mode=True for development
-```
-
----
-
-## What You Can Do
-
-| Capability | Method | Cost | Grounded In |
-|-----------|--------|------|------------|
-| See assumptions | `state().assumptions()` | Free | Brandom (inferential role) |
-| See derived commitments | `state().derived()` | Free | Commitment closure |
-| Trace dependencies | `state().depends_on(P)` | Free | Kripke (accessibility) |
-| Find gaps | `state().gaps_to(goal)` | Free | Peirce (abduction) |
-| Detect cycles | `state().circular()` | Free | Tarjan's SCC, O(V+E) |
-| Find weakest link | `state().weakest_link()` | Free | Confidence propagation |
-| Measure strength | `state().strength()` | Free | Composite score |
-| Summarize state | `state().summary()` | Free | Human-readable |
-| Explore hypotheticals | `suppose(P)` | Free | Kripke (possible worlds) |
-| Compare reasoning | `diff(other)` | Free | Gentner (structure mapping) |
-| Detect violations | `step(reasoning, action)` | 1 API call | Graph traversal + entailment |
-| Visualize graph | `show()` | Free | Pyvis (vis.js) |
-| Jupyter rendering | `_repr_html_()` | Free | Inline HTML |
-| Audit trail | `trace()` | Free | Structured event log |
-| Export graph | `export_dot()` | Free | Graphviz DOT |
-
----
-
-## Why This Is New
-
-| What Exists | What Nous Does Instead |
-|------------|----------------------|
-| Lean/Coq: formal proofs for math | Formal structure for ANY reasoning |
-| LLM CoT: opaque text stream | Inspectable graph with queryable structure |
-| Graph of Thoughts: paper concept | Deployed tool with real API |
-| Guardrails AI: validate output format | Make the reasoning ITSELF queryable |
-| AlphaProof: solve competition math | Help researchers explore and strengthen arguments |
-
-**No deployed tool** takes informal reasoning, extracts its logical structure, and makes it a first-class computational object you can inspect, query, manipulate, fork, and compare.
 
 ---
 
@@ -207,94 +222,18 @@ n = Nous(backend="nli")  # Free local NLI model for entailment
 
 ```
 nous/
-├── __init__.py       # Nous class (3-method API + query surface)
-├── graph.py          # CommitmentGraph (THE core data structure)
-├── query.py          # Structural queries (pure graph algorithms)
-├── entailment.py     # Pluggable backends (NLI/embed/LLM)
-├── extractor.py      # Belief extraction from natural language
-├── trace.py          # Reasoning trace for auditability
-├── viz.py            # Visualization (Pyvis, Rich, Jupyter)
-├── providers/        # Any-LLM support (Anthropic, OpenAI)
-└── integrations/     # LangChain, generic agent loops
-```
-
-### Entailment Backends
-
-| Backend | Cost | Speed | Accuracy | Install |
-|---------|------|-------|----------|---------|
-| NLI (recommended) | Free | ~50ms/check | ~90% MNLI | `pip install nous-ai[nli]` |
-| Embedding | Free | ~10ms/check | ~75% | `pip install nous-ai[nli]` |
-| LLM (Claude) | ~$0.001/check | ~500ms | ~95% | Set `ANTHROPIC_API_KEY` |
-
-### LLM Providers
-
-```python
-n = Nous(provider="anthropic")  # Claude (default)
-n = Nous(provider="openai")     # GPT-4
-n = Nous(backend="nli")         # Free, no LLM for entailment
-```
-
----
-
-## Lean 4 Proofs
-
-The violation taxonomy is formally verified in Lean 4:
-
-- **Soundness**: if the system reports a violation, the trace is genuinely incoherent
-- **Completeness**: every form of incoherence maps to exactly one violation type
-- **Closure properties**: the commitment closure operator is monotone and idempotent
-
-See `theory/` for the full Lean 4 development.
-
----
-
-## Evaluation
-
-On a 40-task benchmark spanning math, science, coding, and mixed-domain reasoning:
-
-| Metric | Score |
-|--------|-------|
-| F1 | 0.842 |
-| Precision | 0.889 |
-| Recall | 0.800 |
-
-The system catches real violations with high precision while avoiding false alarms.
-
----
-
-## Integration
-
-### Direct (Recommended)
-
-```python
-from nous import Nous
-
-n = Nous()
-for step in agent.run():
-    r = n.step(step.reasoning, step.action)
-    if not r:  # StepResult is falsy when incoherent
-        print(f"Violation: {r.violation['type']}")
-        print(f"Chain: {r.violation['chain']}")
-```
-
-### LangChain
-
-```python
-from nous.integrations.langchain import NousCallback
-
-callback = NousCallback(on_violation="halt")
-agent = AgentExecutor(agent=..., tools=..., callbacks=[callback])
-```
-
-### Any Agent Loop
-
-```python
-from nous.integrations.generic import guard_agent_loop
-
-for step, result in guard_agent_loop(agent.stream()):
-    if not result:
-        agent.stop()
-        break
+├── __init__.py           # Nous class — the public API
+├── graph.py              # CommitmentGraph — directed belief graph
+├── closure.py            # Closure operator — computes C({P1,...Pn})
+├── extractor.py          # Pulls commitments from natural language
+├── coherence.py          # Checks action against closure
+├── detector.py           # Classifies violation type
+├── entailment.py         # Pluggable backends (NLI / LLM / test)
+├── query.py              # Graph queries (assumptions, gaps, cycles...)
+├── trace.py              # Structured audit log
+├── viz.py                # Pyvis + Rich + Jupyter rendering
+├── providers/            # Anthropic, OpenAI, Gemini
+└── integrations/         # LangChain, generic agent loop
 ```
 
 ---
@@ -304,12 +243,45 @@ for step, result in guard_agent_loop(agent.stream()):
 | Artifact | Location |
 |----------|----------|
 | Paper outline + abstract | [`paper/outline.md`](paper/outline.md) |
-| Lean 4 soundness proofs | [`theory/README.md`](theory/README.md) |
-| Benchmark results (40 tasks) | [`eval/results/README.md`](eval/results/README.md) |
-| Dataset schema + domain breakdown | [`eval/datasets/README.md`](eval/datasets/README.md) |
+| Lean 4 soundness proofs | [`theory/`](theory/) — build with `lake build` |
+| Philosophical framework | [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) |
+| Benchmark results (40 tasks) | [`eval/results/`](eval/results/) |
+| Dataset (40 annotated traces) | [`eval/datasets/closure_tasks.json`](eval/datasets/closure_tasks.json) |
 | Reproduce Table 1 | `bash scripts/reproduce_table1.sh` |
 | Cite this work | [`CITATION.cff`](CITATION.cff) |
 
+---
+
+## Contributing
+
+Open an issue before submitting a pull request — especially for changes to the violation taxonomy or Lean proofs, where the formal and empirical sides need to stay in sync.
+
+The test suite runs without an API key:
+
+```bash
+pip install -e ".[dev]"
+pytest tests/ -v
+```
+
+For changes to the entailment pipeline, run the full eval to check precision/recall don't regress:
+
+```bash
+bash scripts/reproduce_table1.sh
+```
+
+---
+
 ## License
 
-MIT
+MIT © 2026 Sayan Gupta
+
+To cite:
+
+```bibtex
+@software{gupta2026nous,
+  author = {Gupta, Sayan},
+  title  = {Nous: Formally-Grounded Detection of Epistemic Closure Violations in LLM Agent Reasoning Traces},
+  year   = {2026},
+  url    = {https://github.com/sayang7/nous}
+}
+```
