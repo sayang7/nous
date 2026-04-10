@@ -1,4 +1,4 @@
-# ClosureGuard Research Notes
+# Nous — Research Notes
 
 ## Philosophical Framework
 
@@ -36,7 +36,7 @@ inferential commitment** — not a factual error, but a *normative incoherence*.
 ### What Is Missing (And Why We Exclude It)
 
 - **Defeasible reasoning** (Pollock 1987, non-monotonic logic): Excluded because
-  ClosureGuard monitors *deductive* closure, not default reasoning. An agent using
+  Nous monitors *deductive* closure, not default reasoning. An agent using
   a defeasible rule that gets defeated is behaving correctly.
 - **Probabilistic coherence** (Dutch book arguments): Out of scope — requires
   quantitative probability extraction, which is a different research problem.
@@ -159,7 +159,7 @@ distribution of confidence scores across the 40-task benchmark.
 
 ## Prior Work Landscape
 
-### ClosureGuard's Unique Contribution
+### Nous's Unique Contribution
 
 No existing tool combines:
 1. Formal epistemic logic (Kripke semantics, Lean 4 proofs)
@@ -171,13 +171,13 @@ No existing tool combines:
 - **InferAct** (EMNLP 2025): ToM-based belief inference for action safety. Informal, no formal logic.
 - **Agent Behavioral Contracts** (2026): Design-by-Contract for agents. Formal but contractual, not epistemic.
 - **ShieldAgent** (ICML 2025): Probabilistic rule circuits for action safety. No epistemic framework.
-- **Self-Contradiction Detection** (EMNLP 2024): P ∧ ¬P detection. ClosureGuard detects P→Q, act(¬Q) — strictly harder.
+- **Self-Contradiction Detection** (EMNLP 2024): P ∧ ¬P detection. Nous detects P→Q, act(¬Q) — strictly harder.
 
 ## Audit Findings: Status
 
 ### Priority 1: Reproducibility
 - [x] temperature=0 on all API calls
-- [x] Model parameter configurable (CLOSUREGUARD_MODEL env var)
+- [x] Model parameter configurable (NOUS_MODEL env var)
 
 ### Priority 2: Architecture
 - [x] Closure-based pipeline (replaces pairwise)
