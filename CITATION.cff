@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use Nous in your research, please cite it as below."
+type: software
+title: "Nous: Formally-Grounded Detection of Epistemic Closure Violations in LLM Agent Reasoning Traces"
+version: 0.4.0
+date-released: "2026-04-10"
+url: "https://github.com/sayang7/nous"
+repository-code: "https://github.com/sayang7/nous"
+license: MIT
+authors:
+  - family-names: Gupta
+    given-names: Sayan
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+abstract: >
+  Nous is a formal reasoning integrity engine for AI agents. It detects epistemic
+  closure violations — cases where an agent's actions contradict the logical
+  consequences of its own stated beliefs — using Kripke semantics, a commitment
+  graph, and Lean 4 soundness proofs. On a 40-task benchmark, Nous achieves
+  0.889 precision and 0.800 recall (F1 = 0.842).
+keywords:
+  - epistemic logic
+  - LLM agents
+  - reasoning integrity
+  - formal verification
+  - Kripke semantics
+  - belief-action coherence
+  - AI safety
+preferred-citation:
+  type: article
+  title: "Nous: Formally-Grounded Detection of Epistemic Closure Violations in LLM Agent Reasoning Traces"
+  authors:
+    - family-names: Gupta
+      given-names: Sayan
+  year: 2026
+  url: "https://github.com/sayang7/nous"

@@ -14,7 +14,8 @@ lake-manifest.json
 *.ilean
 *.trace
 build/
-eval/results/
+# eval/results/ — intentionally tracked for reproducibility
 .pytest_cache/
 dist/
 *.egg-info/
+.gstack/

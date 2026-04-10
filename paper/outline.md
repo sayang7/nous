@@ -1,4 +1,4 @@
-# ClosureGuard: Formally-Grounded Detection of Epistemic Closure Violations in LLM Agent Reasoning Traces
+# Nous: Formally-Grounded Detection of Epistemic Closure Violations in LLM Agent Reasoning Traces
 
 ## Paper Outline (Target: AAAI / ICLR / NeurIPS workshop on LLM Agents / EMNLP)
 
