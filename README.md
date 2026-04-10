@@ -70,8 +70,10 @@ r.violation          # Exact path showing the gap
 ## Quick Start
 
 ```bash
-pip install nous-ai
+pip install git+https://github.com/sayang7/nous
 ```
+
+> PyPI release coming after ArXiv submission. Use the git install above for now.
 
 ### Detect a violation
 
@@ -296,6 +298,17 @@ for step, result in guard_agent_loop(agent.stream()):
 ```
 
 ---
+
+## Research Artifacts
+
+| Artifact | Location |
+|----------|----------|
+| Paper outline + abstract | [`paper/outline.md`](paper/outline.md) |
+| Lean 4 soundness proofs | [`theory/README.md`](theory/README.md) |
+| Benchmark results (40 tasks) | [`eval/results/README.md`](eval/results/README.md) |
+| Dataset schema + domain breakdown | [`eval/datasets/README.md`](eval/datasets/README.md) |
+| Reproduce Table 1 | `bash scripts/reproduce_table1.sh` |
+| Cite this work | [`CITATION.cff`](CITATION.cff) |
 
 ## License
 
