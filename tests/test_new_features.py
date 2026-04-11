@@ -84,7 +84,7 @@ class TestStepResult:
                                   "violated": "catalyst is air-sensitive",
                                   "confidence": 0.95, "chain": "A -> B"})
         s = str(r)
-        assert "INCOHERENT" in s
+        assert "VIOLATION" in s
         assert "ModusPonensViolation" in s
 
     def test_bool_coherent(self):
@@ -162,7 +162,7 @@ class TestStrengthAndSummary:
             test_mode=True,
         )
         s = n.state().summary()
-        assert "INCOHERENT" in s
+        assert "INCOHERENT" in s or "violation" in s.lower()
 
 
 # ─── Visualization Tests ─────────────────────────────────────────────

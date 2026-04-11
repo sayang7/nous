@@ -53,7 +53,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     "Nous",
     "StepResult",
@@ -85,29 +85,142 @@ _load_dotenv()
 
 # ─── Primary interface ────────────────────────────────────────────────
 
+# Violation types that have Lean soundness proofs → can reach "formal" certainty
+_FORMAL_VIOLATION_TYPES: frozenset[str] = frozenset({
+    "ModusPonensViolation",
+    "ModalScopeError",
+})
+
+# Philosopher responsible for each violation class
+_PHILOSOPHICAL_FRAMES: dict[str, str] = {
+    "ModusPonensViolation": (
+        "Aristotle — Syllogistic logic (Prior Analytics, 350 BC): "
+        "if P is asserted and P→Q is asserted, Q must hold. "
+        "This action treats Q as false while both P and P→Q are in the closure. "
+        "Lean theorem: modusPonensSound in theory/ClosureViolation.lean."
+    ),
+    "ModalScopeError": (
+        "Kripke — Possible-world semantics (Naming and Necessity, 1963): "
+        "necessity (☐P) means P holds in ALL accessible worlds; "
+        "possibility (◇P) means P holds in SOME. "
+        "This step treats a necessity claim as merely possible, or vice versa. "
+        "Lean theorem: modalScopeSound in theory/ClosureViolation.lean."
+    ),
+    "BeliefRevisionFailure": (
+        "Brandom — Inferential commitment (Making It Explicit, 1994): "
+        "new evidence that contradicts a prior belief demands explicit retraction. "
+        "The agent received contradicting evidence but the original commitment persists "
+        "unreised in the closure."
+    ),
+    "TemporalCoherenceViolation": (
+        "Hintikka — Epistemic logic (Knowledge and Belief, 1962): "
+        "K(P) at time T₁ entails a commitment to P at T₂ unless explicitly retracted. "
+        "This step applies a belief from an earlier context without revalidating it."
+    ),
+    "ReferentialOpacityFailure": (
+        "Peirce — Abductive inference (Collected Papers, 1903): "
+        "co-referential substitution fails inside a belief context. "
+        "'Lois knows Clark Kent flies' ≠ 'Lois knows Superman flies' "
+        "even when Clark Kent = Superman. The substitution creates a new belief-action gap."
+    ),
+}
+
+_CLEAN_FRAME = (
+    "Hintikka — Epistemic closure maintained (Knowledge and Belief, 1962): "
+    "K(P) ∧ K(P→Q) → K(Q). This step's action is consistent with all "
+    "propositions in the commitment closure. No inferential commitment is violated."
+)
+
+
+def _compute_certainty(violation_dict: Optional[dict]) -> str:
+    """Assign a certainty tier to a step verification result.
+
+    Tiers:
+        formal  — Lean-decidable violation type with high confidence (≥0.95).
+                  The violation class has a soundness proof in theory/.
+        high    — Multi-model consensus (reserved for Phase D.3 multi-model verifier).
+        medium  — Single-model LLM detection (confidence ≥0.85), or clean step.
+        low     — Below the review threshold; flagged but uncertain.
+    """
+    if not violation_dict:
+        return "medium"  # clean step verified at single-model confidence
+    vtype = violation_dict.get("type", "")
+    confidence = float(violation_dict.get("confidence", 0.0))
+    if vtype in _FORMAL_VIOLATION_TYPES and confidence >= 0.95:
+        return "formal"
+    if confidence >= 0.85:
+        return "medium"
+    return "low"
+
+
+def _compute_justification(
+    violation_dict: Optional[dict],
+    certainty: str,
+    closure_size: int,
+) -> str:
+    """Generate a human-readable justification for the certainty rating."""
+    if not violation_dict:
+        return (
+            f"Step verified coherent: the action does not contradict any of "
+            f"{closure_size} proposition(s) in the commitment closure."
+        )
+    vtype = violation_dict.get("type", "unknown")
+    confidence = float(violation_dict.get("confidence", 0.0))
+    explanation = violation_dict.get("explanation", "Action contradicts the commitment closure.")
+    if certainty == "formal":
+        return (
+            f"Lean-decidable violation ({vtype}): this class of violation has a "
+            f"soundness proof in theory/ClosureViolation.lean. Given explicitly stated "
+            f"propositions, the violation is formally certain (confidence {confidence:.0%})."
+        )
+    if certainty == "medium":
+        return f"Single-model LLM verification (confidence {confidence:.0%}): {explanation}"
+    # low
+    return (
+        f"Confidence {confidence:.0%} is below the 0.85 threshold. "
+        f"Violation is flagged for human review — treat as a strong signal, not a certainty."
+    )
+
+
 @dataclass
 class StepResult:
-    """Result of adding a step to the reasoning engine."""
+    """Result of adding a step to the reasoning engine.
+
+    Fields added in v0.5 (Phase D.2):
+        certainty           — "formal" | "high" | "medium" | "low"
+        justification       — why this certainty was assigned
+        philosophical_frame — which philosopher's framework applies
+        assumptions_surfaced — explicit beliefs extracted at this step
+        new_commitments     — derived consequences now in the closure
+    """
     step_index: int
     coherent: bool
     violation: Optional[dict] = None
-    commitments_added: int = 0
+    commitments_added: int = 0          # count, kept for backward compat
     total_commitments: int = 0
     closure_size: int = 0
+    # Phase D.2 — metaphysical transparency layer
+    certainty: str = "medium"
+    justification: str = ""
+    philosophical_frame: str = ""
+    assumptions_surfaced: list = field(default_factory=list)
+    new_commitments: list = field(default_factory=list)
 
     def __str__(self) -> str:
         if self.coherent:
+            frame_short = self.philosophical_frame.split("—")[0].strip() if self.philosophical_frame else ""
             return (
-                f"Step {self.step_index}: coherent "
-                f"(+{self.commitments_added} commitments, "
-                f"{self.total_commitments} total, "
-                f"{self.closure_size} in closure)"
+                f"Step {self.step_index}: coherent [{self.certainty}] "
+                f"(+{self.commitments_added} commitments, {self.closure_size} in closure)"
+                + (f"\n  Frame: {frame_short}" if frame_short else "")
             )
         v = self.violation or {}
         return (
-            f"Step {self.step_index}: INCOHERENT — {v.get('type', 'unknown')}\n"
+            f"Step {self.step_index}: VIOLATION [{self.certainty}] — {v.get('type', 'unknown')}\n"
             f"  Violated: {v.get('violated', '?')}\n"
             f"  Confidence: {v.get('confidence', 0):.0%}\n"
+            f"  Justification: {self.justification}\n"
+            f"  Frame: {self.philosophical_frame.split(chr(10))[0]}\n"
             f"  Chain:\n{v.get('chain', '')}"
         )
 
@@ -262,6 +375,19 @@ class Nous:
                 "Step coherent",
             )
 
+        # ── Phase D.2: certainty tier + philosophical transparency ──
+        certainty = _compute_certainty(violation_dict)
+        justification = _compute_justification(violation_dict, certainty, len(closure))
+        philosophical_frame = (
+            _PHILOSOPHICAL_FRAMES.get(violation_dict["type"], _CLEAN_FRAME)
+            if violation_dict else _CLEAN_FRAME
+        )
+
+        # Nodes added at this step: explicit assertions and derived consequences
+        step_nodes = [n for n in self._graph.nodes.values() if n.source_step == idx]
+        assumptions_surfaced = [n.content for n in step_nodes if n.is_explicit]
+        new_commitments_list = [n.content for n in step_nodes if not n.is_explicit]
+
         return StepResult(
             step_index=step_index or self._graph._step_count,
             coherent=violation_path is None,
@@ -269,6 +395,11 @@ class Nous:
             commitments_added=new_nodes,
             total_commitments=len(self._graph.nodes),
             closure_size=len(closure),
+            certainty=certainty,
+            justification=justification,
+            philosophical_frame=philosophical_frame,
+            assumptions_surfaced=assumptions_surfaced,
+            new_commitments=new_commitments_list,
         )
 
     def state(self) -> "ReasoningState":

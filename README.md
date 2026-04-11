@@ -22,13 +22,23 @@
 
 ## The Problem
 
-An AI agent says *"the catalyst is air-sensitive"* then opens the flask to air. No existing tool catches this.
+A medical AI reads a patient chart.
 
-It isn't a hallucination — the agent never claims the flask is safe. It isn't self-contradiction — neither statement says anything about the other. It is a **belief-action gap**: the agent held a commitment (`air-sensitive → stay under nitrogen`) and acted against it without retracting the commitment first.
+It registers: *"Prior anaphylactic reaction to penicillin. All beta-lactam antibiotics are contraindicated."*
 
-Formally: `K(P) ∧ K(P → Q) ∧ act(¬Q)`.
+Three reasoning steps later, it recommends amoxicillin — a beta-lactam antibiotic.
 
-Nous detects this. SelfCheckGPT needs ground truth. Contradiction detectors find `P ∧ ¬P`. Nous finds the hidden violation where an agent's *action* breaks the logical closure of its *own stated beliefs*.
+The AI didn't hallucinate. It didn't contradict itself. Every individual fact it stated was true. The problem lives *between* those statements, in the gap between a commitment the AI made and an action that violated it — without the AI ever noticing.
+
+This failure pattern is everywhere AI agents operate at scale: clinical decision support, legal document review, lab automation, financial analysis, code generation. The agent says something that commits it to a constraint. Then it violates the constraint. No alarm fires. The human downstream has no idea.
+
+**Why SelfCheckGPT misses it.** SelfCheckGPT samples the same prompt multiple times and checks whether answers agree. It needs multiple outputs and a comparison strategy. A violation buried inside a *single* reasoning chain — where every individual statement looks fine — is invisible to it.
+
+**Why contradiction detectors miss it.** Contradiction detectors find P ∧ ¬P: cases where the AI directly asserts opposing things. "Patient is allergic to penicillin" and "prescribe amoxicillin" don't contradict each other as sentences. They only become a violation when you follow the logic the AI itself established — and that requires knowing that amoxicillin is a beta-lactam, a fact the AI stated and then ignored.
+
+**Why hallucination detectors miss it.** Hallucination detectors check whether stated facts are true. Every fact here is true. Penicillin allergy is documented. Amoxicillin is first-line for pneumonia. No hallucination occurred. The problem is a broken inference chain, not a false statement.
+
+Nous needs none of these workarounds. It reads the AI's own reasoning, builds an explicit map of every commitment the AI made, and checks whether each action is coherent with that map. The AI's own words are the ground truth. One trace. No external labels. No second samples.
 
 ---
 
@@ -42,12 +52,41 @@ pip install git+https://github.com/sayang7/nous
 from nous import Nous
 
 n = Nous()
-n.step("The catalyst is air-sensitive. Exposure to oxygen deactivates it.", "Note requirement.")
-n.step("Transfer catalyst under nitrogen.", "Transfer catalyst.")
-r = n.step("Open flask to air to add reagent.", "Add reagent.")
 
-print(r.coherent)   # False
-print(r.violation)  # {'type': 'ModusPonensViolation', 'chain': [...]}
+# The AI reads the patient chart
+n.step(
+    "Patient has documented penicillin allergy — prior anaphylactic reaction. "
+    "All beta-lactam antibiotics are contraindicated.",
+    "Flag allergy. Beta-lactams including amoxicillin are off-limits."
+)
+
+# The AI assesses the condition
+n.step(
+    "Patient presents with community-acquired pneumonia requiring antibiotic coverage.",
+    "Select an appropriate antibiotic."
+)
+
+# The AI recommends — and silently breaks its own commitment
+r = n.step(
+    "Amoxicillin is effective for community-acquired pneumonia and well-tolerated.",
+    "Prescribe amoxicillin 500mg three times daily."
+)
+
+print(r.coherent)             # False
+print(r.certainty)            # "formal" — provable under stated commitments
+print(r.violation["type"])    # "ModusPonensViolation"
+print(r.justification)
+# Lean-decidable violation (ModusPonensViolation): soundness proof in
+# theory/ClosureViolation.lean. Formally certain given stated propositions.
+print(r.philosophical_frame)
+# Aristotle — Syllogistic logic: if P is asserted and P→Q is asserted,
+# Q must hold. This action treats Q as false while both P and P→Q are
+# in the commitment closure.
+print(r.violation["chain"])
+# [ASSERTED @ step 1] beta-lactam antibiotics are contraindicated
+# [ASSERTED @ step 1] amoxicillin is a beta-lactam antibiotic
+# [ACTION   @ step 3] Prescribe amoxicillin 500mg three times daily
+# CONTRADICTION: action presupposes NOT(beta-lactam antibiotics contraindicated)
 ```
 
 No API key needed for development:
@@ -98,17 +137,20 @@ The commitment graph is the core data structure. Every query — assumptions, de
 
 ## Violation Taxonomy
 
-Five types, each grounded in a specific tradition of formal logic with Lean 4 soundness proofs:
+Six types. Each describes a specific way an AI agent's actions diverge from the logical consequences of what it said. Each has a Lean 4 soundness proof establishing that any detected violation is a genuine breach of inferential commitment.
 
-| ID | Type | Philosopher | What It Catches | Lean Theorem |
-|----|------|-------------|-----------------|--------------|
-| GT-01 | `ModusPonensViolation` | Hintikka (1962) — Axiom K | Agent commits to P and P→Q, acts as ¬Q | `modusPonensSound` |
-| GT-02 | `BeliefRevisionFailure` | AGM (1985) | New evidence received, contradicted prior belief persists | `beliefRevisionSound` |
-| GT-03 | `ModalScopeError` | Kripke (1963) | Necessity (□) treated as possibility (◇) or vice versa | `modalScopeSound` |
-| GT-04 | `TemporalCoherenceViolation` | Prior (1967) | Belief from time T₁ applied at T₂ without revalidation | `temporalCoherenceSound`* |
-| GT-05 | `ReferentialOpacityFailure` | Frege (1892) | Co-referential substitution inside a belief context | LLM-only (undecidable) |
+| ID | Plain name | Technical type | What actually happens | Lean proof |
+|----|------------|----------------|-----------------------|------------|
+| GT-01 | **Acting against stated knowledge** | `ModusPonensViolation` | AI commits: "beta-lactams are contraindicated." Then recommends amoxicillin — a beta-lactam. | `modusPonensSound` |
+| GT-02 | **Ignoring a correction** | `BeliefRevisionFailure` | AI is told: new data contradicts the original finding. It acknowledges the update. Then keeps reasoning from the original finding as if nothing changed. | `beliefRevisionSound` |
+| GT-03 | **Upgrading a guess to a fact** | `ModalScopeError` | AI says a risk "might exist." Three steps later treats that possibility as a certainty when making a decision that affects the patient. | `modalScopeSound` |
+| GT-04 | **Using an expired rule** | `TemporalCoherenceViolation` | AI is given updated dosing guidelines at step 4. At step 11, it applies the original guidelines without noting the update or justifying the choice. | `temporalCoherenceSound`* |
+| GT-05 | **Ignoring what two facts imply together** | `EpistemicClosureViolation` | AI knows the building requires fire suppression. Knows the design has no sprinklers. Approves the design. The conclusion was right there. | `epistemicClosureSound` |
+| GT-06 | **Treating the same thing as two different things** | `ReferentialOpacityFailure` | The trustee and the beneficiary are the same person. AI gives advice appropriate for one role that violates the other — and never notices they're the same. | LLM-only (undecidable in general) |
 
-*One `sorry` remains in the temporal proof. See [`theory/README.md`](theory/README.md) for details.
+*One `sorry` remains in the temporal proof — the abstract framework is sound but the formalization is incomplete. See [`theory/README.md`](theory/README.md).
+
+The first four types are formally decidable given explicitly stated propositions. `ReferentialOpacityFailure` requires world knowledge and falls back to multi-model consensus (Phase D.3). The certainty tier system in `StepResult` tracks which path each violation took.
 
 The proofs establish soundness of the *abstract framework* — every detected violation is a genuine breach of inferential commitment. They do not certify the Python detector's recall. See [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) for the honest account of what the formal guarantees do and do not cover.
 

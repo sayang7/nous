@@ -11,26 +11,33 @@ from nous.extractor import SYSTEM_PROMPT, _test_fixtures_lookup
 logger = logging.getLogger(__name__)
 
 REASON_PROMPT = """\
-You are a philosophical reasoning engine. When given a question, reason through it with genuine depth — \
-surface hidden assumptions, follow implications to their logical ends, explore what must be true for each \
-claim to hold, and commit fully to your conclusions even when they create tension with earlier steps. \
-Don't hedge. Don't summarise. Think.
+You are reasoning like a philosopher. At every step, you hold yourself accountable to the logical \
+consequences of what you just said. You name your assumptions. You follow implications to where they \
+must go. If a later step forces you to abandon an earlier commitment, say so explicitly — that is the \
+mark of honest reasoning, not a failure.
+
+When given a question, reason through it with genuine depth. Surface hidden assumptions, follow \
+implications to their logical ends, explore what must be true for each claim to hold, and commit \
+fully to your conclusions even when they create tension with earlier steps. Don't hedge. Don't \
+summarise. Think.
 
 Return ONLY a JSON array — no other text, no markdown fences:
 [
-  {"text": "Your reasoning at this step: the observation, assumption, or implication you are exploring", \
-"action": "The definite claim or commitment you are making — what must now be true given this step"},
-  ...
+  {
+    "text": "Your reasoning at this step — the observation, assumption, or implication you are exploring",
+    "action": "The definite claim you are making — what must now be true given this step",
+    "assumes": ["hidden premise this step silently requires", "another if any"],
+    "commits_to": ["downstream claim this step now entails", "another if any"]
+  }
 ]
 
 Rules:
 - 5–9 steps
-- Each step should surface something non-obvious: a hidden premise, a logical consequence, a \
-metaphysical assumption, a historical pattern, a structural constraint
-- Make strong, specific commitments in "action" — not "we should consider X" but "X entails Y", \
-"therefore Z is impossible", "we must assume A for this to hold"
-- Later steps may and should build on, extend, or collide with earlier ones — \
-that tension is the point
+- "assumes": every hidden premise this step requires — what must already be true for this step to be valid. Surface the invisible imports.
+- "commits_to": every downstream claim this step entails — what you are now bound to. If any later step contradicts these, that is a closure violation.
+- Each step should surface something non-obvious: a hidden premise, a logical consequence, a metaphysical assumption, a historical pattern, a structural constraint
+- Make strong, specific commitments in "action" — not "we should consider X" but "X entails Y", "therefore Z is impossible", "we must assume A for this to hold"
+- Later steps may and should build on, extend, or collide with earlier ones — that tension is the point
 - Reason across levels freely: logical, mathematical, philosophical, historical, structural
 - Ask what the question reveals about the nature of the domain, not just what the answer is
 """
@@ -124,7 +131,12 @@ class OpenAIProvider:
             steps = json.loads(content)
             if isinstance(steps, list):
                 return [
-                    {"text": str(s.get("text", "")), "action": str(s.get("action", ""))}
+                    {
+                        "text": str(s.get("text", "")),
+                        "action": str(s.get("action", "")),
+                        "assumes": [str(a) for a in s.get("assumes", []) if isinstance(a, str)],
+                        "commits_to": [str(c) for c in s.get("commits_to", []) if isinstance(c, str)],
+                    }
                     for s in steps
                     if isinstance(s, dict)
                 ]
