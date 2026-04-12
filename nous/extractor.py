@@ -136,6 +136,33 @@ _TEST_FIXTURES: dict[str, list[str]] = {
     "Based on the literature, we recommend compound X as a potential enhancer of pathway Z for therapeutic applications.": [
         "Compound X is recommended as an enhancer of pathway Z.",
     ],
+    # ── Investment advisor: conservative client misallocated to crypto ──
+    "Client intake: 68-year-old retiree. Sole income is this portfolio. Risk tolerance assessment: conservative. Primary objective: capital preservation. Cannot sustain significant drawdowns.": [
+        "The client has a conservative risk tolerance.",
+        "Capital preservation is the primary investment objective.",
+        "The client cannot sustain significant portfolio drawdowns.",
+        "Speculative and high-risk investments are inappropriate for this client.",
+    ],
+    "Market context: Bitcoin lost 65% of its value in 2022. Ethereum lost 68%. Cryptocurrency markets have shown 40-70% annual drawdowns historically.": [
+        "Cryptocurrency assets can lose 65-70% of value in a single year.",
+        "Cryptocurrency is a highly volatile and speculative asset class.",
+        "Cryptocurrency carries high risk of significant drawdown.",
+    ],
+    "Despite the historical volatility, Bitcoin and Ethereum have shown strong recovery and long-term appreciation. Recommend allocating 40% of the retirement portfolio to crypto for growth.": [
+        "Bitcoin and Ethereum have shown long-term price appreciation.",
+        "A 40% allocation to cryptocurrency is being recommended.",
+    ],
+    # ── Legal AI: non-compete clause breach ──
+    "Contract review complete. Section 7.2 contains a non-compete clause: client may not operate a competing business for 18 months post-employment. Client's employment ended at month 0. Current month: 12. Non-compete expires: month 19.": [
+        "The non-compete clause expires at month 19.",
+        "The client is currently in month 12 of the non-compete period.",
+        "The non-compete clause prohibits operating a competing business until month 19.",
+        "Operating a competing business before month 19 would breach the contract.",
+    ],
+    "The client wants to launch the competing business as soon as possible. Given the strong market opportunity, we should advise them to begin operations now.": [
+        "The client intends to begin the competing business immediately.",
+        "A recommendation to begin operations immediately is being made.",
+    ],
 }
 
 

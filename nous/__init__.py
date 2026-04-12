@@ -137,13 +137,14 @@ def _compute_certainty(violation_dict: Optional[dict]) -> str:
 
     Tiers:
         formal  — Lean-decidable violation type with high confidence (≥0.95).
-                  The violation class has a soundness proof in theory/.
-        high    — Multi-model consensus (reserved for Phase D.3 multi-model verifier).
-        medium  — Single-model LLM detection (confidence ≥0.85), or clean step.
+                  Has a soundness proof in theory/ClosureViolation.lean.
+        high    — Multi-model consensus (reserved for Phase D.3).
+        medium  — Single-model LLM detection (confidence ≥0.85).
         low     — Below the review threshold; flagged but uncertain.
+        ok      — Clean step, no violation found at any confidence level.
     """
     if not violation_dict:
-        return "medium"  # clean step verified at single-model confidence
+        return "ok"
     vtype = violation_dict.get("type", "")
     confidence = float(violation_dict.get("confidence", 0.0))
     if vtype in _FORMAL_VIOLATION_TYPES and confidence >= 0.95:
@@ -151,6 +152,39 @@ def _compute_certainty(violation_dict: Optional[dict]) -> str:
     if confidence >= 0.85:
         return "medium"
     return "low"
+
+
+def _compute_status(violation_dict: Optional[dict], certainty: str) -> str:
+    """Map certainty tier to the human-facing action status.
+
+    This is the primary interface for human-in-loop routing.
+
+    ok        — No violation found. Agent proceeds.
+    violation — DEFINITE. Lean-decidable. The math proves it. Halt now.
+    warning   — PROBABLE. LLM flagged it at high confidence. Human should
+                verify before the agent continues.
+    review    — UNCERTAIN. Below the confidence threshold. Human must verify.
+                Do not proceed automatically.
+
+    Usage::
+
+        r = n.step(reasoning, action)
+        if r.status == "violation":
+            agent.halt()                     # certain — don't route to human
+        elif r.status == "warning":
+            human.review(r)                  # probable — human verifies
+        elif r.status == "review":
+            human.must_verify(r)             # uncertain — mandatory stop
+        else:                                # "ok"
+            agent.proceed()
+    """
+    if not violation_dict:
+        return "ok"
+    if certainty == "formal":
+        return "violation"      # certain — system halts
+    if certainty in ("high", "medium"):
+        return "warning"        # probable — human reviews
+    return "review"             # uncertain — human must verify
 
 
 def _compute_justification(
@@ -184,48 +218,124 @@ def _compute_justification(
 
 @dataclass
 class StepResult:
-    """Result of adding a step to the reasoning engine.
+    """Result of adding one step to the reasoning engine.
 
-    Fields added in v0.5 (Phase D.2):
-        certainty           — "formal" | "high" | "medium" | "low"
-        justification       — why this certainty was assigned
-        philosophical_frame — which philosopher's framework applies
+    The primary interface for human-in-loop routing is `status`:
+
+        "ok"        — clean. No violation found. Agent proceeds.
+        "violation" — DEFINITE. Lean-decidable. Halt the agent.
+        "warning"   — PROBABLE. Human should verify before proceeding.
+        "review"    — UNCERTAIN. Human must verify. Do not auto-proceed.
+
+    Usage::
+
+        r = n.step(reasoning, action)
+
+        # Human-in-loop routing (recommended):
+        if r.status == "violation":
+            agent.halt()
+        elif r.status in ("warning", "review"):
+            human.review(r)
+        else:
+            agent.proceed()
+
+        # Conservative halt-on-any-suspicion (backward compat):
+        if not r:
+            agent.halt()
+
+    Fields:
+        status              — primary routing signal (see above)
+        certainty           — "formal" | "high" | "medium" | "low" | "ok"
+        justification       — why this certainty was assigned, in plain English
+        philosophical_frame — which philosopher's framework applies here
         assumptions_surfaced — explicit beliefs extracted at this step
-        new_commitments     — derived consequences now in the closure
+        new_commitments     — derived consequences added to the closure
+        violation           — full violation dict if any (type, chain, confidence, ...)
+        coherent            — True iff status == "ok" (backward compat)
     """
     step_index: int
     coherent: bool
     violation: Optional[dict] = None
-    commitments_added: int = 0          # count, kept for backward compat
+    commitments_added: int = 0          # count, backward compat
     total_commitments: int = 0
     closure_size: int = 0
-    # Phase D.2 — metaphysical transparency layer
-    certainty: str = "medium"
+    # Phase D.2 — certainty funnel + philosophical transparency
+    status: str = "ok"                  # primary human-in-loop signal
+    certainty: str = "ok"
     justification: str = ""
     philosophical_frame: str = ""
     assumptions_surfaced: list = field(default_factory=list)
     new_commitments: list = field(default_factory=list)
 
+    # ── Convenience properties ──────────────────────────────────────────
+
+    @property
+    def is_definite(self) -> bool:
+        """True only for formal, Lean-decidable violations. Safe to auto-halt."""
+        return self.status == "violation"
+
+    @property
+    def needs_human(self) -> bool:
+        """True for warnings and reviews — uncertain enough to require a human."""
+        return self.status in ("warning", "review")
+
+    # ── String representations ──────────────────────────────────────────
+
     def __str__(self) -> str:
-        if self.coherent:
-            frame_short = self.philosophical_frame.split("—")[0].strip() if self.philosophical_frame else ""
-            return (
-                f"Step {self.step_index}: coherent [{self.certainty}] "
-                f"(+{self.commitments_added} commitments, {self.closure_size} in closure)"
-                + (f"\n  Frame: {frame_short}" if frame_short else "")
-            )
+        return self._format()
+
+    def _format(self) -> str:
         v = self.violation or {}
+        if self.status == "ok":
+            return (
+                f"[OK] Step {self.step_index} — coherent\n"
+                f"  Checked against {self.closure_size} commitment(s). "
+                f"Action is consistent with all.\n"
+                f"  {self.philosophical_frame.split('.')[0]}."
+            )
+        vtype = v.get("type", "unknown")
+        conf = float(v.get("confidence", 0))
+        violated = v.get("violated", "?")
+        action = v.get("action", "?")
+        chain = v.get("chain", "")
+        frame_line = self.philosophical_frame.split(".")[0] if self.philosophical_frame else ""
+
+        if self.status == "violation":
+            return (
+                f"[VIOLATION] Step {self.step_index} — DEFINITE, halt required\n"
+                f"  Type: {vtype} (Lean-decidable, confidence {conf:.0%})\n"
+                f"  Commitment broken: {violated}\n"
+                f"  Action taken: {action}\n"
+                f"  Proof: {frame_line}\n"
+                f"  Chain:\n{chain}\n"
+                f"  >> Agent must halt. This is not a warning."
+            )
+        if self.status == "warning":
+            return (
+                f"[WARNING] Step {self.step_index} — probable violation, human review required\n"
+                f"  Suspected: {vtype} (confidence {conf:.0%})\n"
+                f"  Commitment at risk: {violated}\n"
+                f"  Action taken: {action}\n"
+                f"  Frame: {frame_line}\n"
+                f"  Justification: {self.justification}\n"
+                f"  >> Human must verify before the agent continues."
+            )
+        # review
         return (
-            f"Step {self.step_index}: VIOLATION [{self.certainty}] — {v.get('type', 'unknown')}\n"
-            f"  Violated: {v.get('violated', '?')}\n"
-            f"  Confidence: {v.get('confidence', 0):.0%}\n"
+            f"[REVIEW] Step {self.step_index} — uncertain, human must verify\n"
+            f"  Suspected: {vtype} (confidence {conf:.0%} — below threshold)\n"
+            f"  Commitment at risk: {violated}\n"
+            f"  Action taken: {action}\n"
             f"  Justification: {self.justification}\n"
-            f"  Frame: {self.philosophical_frame.split(chr(10))[0]}\n"
-            f"  Chain:\n{v.get('chain', '')}"
+            f"  >> Do not proceed automatically. Manual verification required."
         )
 
     def __bool__(self) -> bool:
-        """StepResult is truthy when coherent."""
+        """True when coherent (no violation at any certainty level).
+
+        Conservative default: any detected violation (even uncertain) is falsy.
+        For nuanced routing use `status` instead.
+        """
         return self.coherent
 
 
@@ -375,8 +485,9 @@ class Nous:
                 "Step coherent",
             )
 
-        # ── Phase D.2: certainty tier + philosophical transparency ──
+        # ── Phase D.2: certainty funnel + status routing ──
         certainty = _compute_certainty(violation_dict)
+        status = _compute_status(violation_dict, certainty)
         justification = _compute_justification(violation_dict, certainty, len(closure))
         philosophical_frame = (
             _PHILOSOPHICAL_FRAMES.get(violation_dict["type"], _CLEAN_FRAME)
@@ -395,6 +506,7 @@ class Nous:
             commitments_added=new_nodes,
             total_commitments=len(self._graph.nodes),
             closure_size=len(closure),
+            status=status,
             certainty=certainty,
             justification=justification,
             philosophical_frame=philosophical_frame,

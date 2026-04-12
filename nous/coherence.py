@@ -272,6 +272,47 @@ _TEST_COHERENCE: dict[tuple[str, str], CoherenceResult] = {
         confidence=0.96,
         explanation="Recommending X as an enhancer presupposes X enhances Z, directly contradicting the derived commitment that X impairs Z.",
     ),
+
+    # ── Investment advisor: crypto allocation vs conservative risk profile ──
+    # violation: medium certainty (warning — human reviews)
+    ("Allocate 40% of the retirement portfolio to Bitcoin and Ethereum.",
+     "Speculative and high-risk investments are inappropriate for this client."
+    ): CoherenceResult(
+        coherent=False,
+        violation_type="ModusPonensViolation",
+        violated_commitment="Speculative and high-risk investments are inappropriate for this client.",
+        confidence=0.92,
+        explanation=(
+            "Allocating 40% of retirement savings to highly volatile cryptocurrency "
+            "directly contradicts the established commitment that high-risk speculative "
+            "investments are inappropriate given the client's conservative profile and "
+            "capital-preservation objective."
+        ),
+    ),
+
+    # ── Investment advisor: coherent steps ──
+    ("Confirm client risk profile as conservative. High-risk investments excluded.", ""
+    ): CoherenceResult(coherent=True, confidence=0.97),
+    ("Note cryptocurrency as high-volatility speculative asset class.", ""
+    ): CoherenceResult(coherent=True, confidence=0.97),
+
+    # ── Legal AI: advising client during non-compete period ──
+    # violation: formal certainty (ModusPonensViolation, high conf)
+    ("Advise client to begin operating the competing business immediately.",
+     "The non-compete clause prohibits operating a competing business until month 19."
+    ): CoherenceResult(
+        coherent=False,
+        violation_type="ModusPonensViolation",
+        violated_commitment="The non-compete clause prohibits operating a competing business until month 19.",
+        confidence=0.97,
+        explanation=(
+            "Advising the client to begin the competing business immediately contradicts "
+            "the commitment that the non-compete prohibits this until month 19. "
+            "The AI established this constraint itself from the contract review."
+        ),
+    ),
+    ("Note non-compete clause expires at month 19. Current date is month 12.", ""
+    ): CoherenceResult(coherent=True, confidence=0.97),
 }
 
 

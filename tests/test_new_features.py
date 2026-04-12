@@ -80,9 +80,11 @@ class TestStepResult:
 
     def test_incoherent_str(self):
         r = StepResult(step_index=3, coherent=False,
+                       status="violation", certainty="formal",
                        violation={"type": "ModusPonensViolation",
                                   "violated": "catalyst is air-sensitive",
-                                  "confidence": 0.95, "chain": "A -> B"})
+                                  "confidence": 0.95, "chain": "A -> B",
+                                  "action": "open flask", "explanation": "contradiction"})
         s = str(r)
         assert "VIOLATION" in s
         assert "ModusPonensViolation" in s
