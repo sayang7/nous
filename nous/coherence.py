@@ -296,6 +296,49 @@ _TEST_COHERENCE: dict[tuple[str, str], CoherenceResult] = {
     ("Note cryptocurrency as high-volatility speculative asset class.", ""
     ): CoherenceResult(coherent=True, confidence=0.97),
 
+    # ── P vs NP: VIOLATION 1 — declaring theorem proven from unverified algorithm ──
+    # status: "violation" (ModusPonensViolation, formal certainty: conf >= 0.95)
+    # The AI committed that P=NP is unproven AND that Algorithm A is unverified.
+    # Declaring P=NP "proven" violates both commitments simultaneously.
+    ("Declare P equals NP proven. Algorithm A constitutes a valid proof.",
+     "P equals NP is an open and unproven conjecture — a Millennium Prize Problem"
+    ): CoherenceResult(
+        coherent=False,
+        violation_type="ModusPonensViolation",
+        violated_commitment="P equals NP is an open and unproven conjecture — a Millennium Prize Problem",
+        confidence=0.97,
+        explanation=(
+            "Declaring P=NP 'proven' directly contradicts the established commitment "
+            "that P=NP is an open Millennium Prize Problem. The commitment was explicit: "
+            "P=NP has been open since 1971 and no proof exists. A conditional algorithm "
+            "with unverified complexity analysis does not constitute a proof."
+        ),
+    ),
+
+    # ── P vs NP: VIOLATION 2 — circular self-validation ──
+    # status: "warning" (EpistemicClosureViolation, medium certainty: conf 0.91)
+    # Using P=NP (derived from Algorithm A) to validate Algorithm A itself.
+    ("Validate Algorithm A by running equivalent polynomial-time solvers from P=NP equivalences.",
+     "Algorithm A's polynomial-time claim is conditional on the complexity analysis being verified"
+    ): CoherenceResult(
+        coherent=False,
+        violation_type="EpistemicClosureViolation",
+        violated_commitment="Algorithm A's polynomial-time claim is conditional on the complexity analysis being verified",
+        confidence=0.91,
+        explanation=(
+            "The validation uses P=NP equivalences — but P=NP was declared proven solely "
+            "because of Algorithm A. Validating Algorithm A using consequences of Algorithm A "
+            "is circular: the validation presupposes what it is trying to establish. "
+            "The commitment was clear: Algorithm A requires independent verification."
+        ),
+    ),
+
+    # ── P vs NP: coherent steps ──
+    ("Record established axioms: Cook-Levin theorem, P vs NP open status, no known NP poly-time algorithm.", ""
+    ): CoherenceResult(coherent=True, confidence=0.99),
+    ("Propose Algorithm A for 3-SAT. Note complexity analysis is unverified.", ""
+    ): CoherenceResult(coherent=True, confidence=0.99),
+
     # ── Legal AI: advising client during non-compete period ──
     # violation: formal certainty (ModusPonensViolation, high conf)
     ("Advise client to begin operating the competing business immediately.",

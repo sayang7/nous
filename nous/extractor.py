@@ -163,6 +163,36 @@ _TEST_FIXTURES: dict[str, list[str]] = {
         "The client intends to begin the competing business immediately.",
         "A recommendation to begin operations immediately is being made.",
     ],
+
+    # ── P vs NP: proof attempt with two distinct violations ──
+    # Step 1 — established axioms (coherent)
+    "Cook-Levin theorem (1971): 3-SAT is NP-complete. Every problem in NP reduces to 3-SAT in polynomial time. The question of whether P equals NP — whether problems whose solutions can be verified in polynomial time can also be solved in polynomial time — has been open since 1971. It is one of the seven Millennium Prize Problems with a $1 million prize. No polynomial-time algorithm for any NP-complete problem has ever been found or proven to exist.": [
+        "3-SAT is NP-complete — established by the Cook-Levin theorem (1971)",
+        "Every NP problem reduces to 3-SAT in polynomial time",
+        "P equals NP is an open and unproven conjecture — a Millennium Prize Problem",
+        "No polynomial-time algorithm for any NP-complete problem is known to exist",
+        "A polynomial-time algorithm for any NP-complete problem would prove P equals NP",
+    ],
+
+    # Step 2 — algorithm proposal (coherent so far)
+    "We present Algorithm A for 3-SAT. The algorithm applies branch-and-bound with clause-indexed memoization. Complexity analysis: O(n^3) per clause, at most O(n) clauses in reduced form, yielding O(n^4) total. This analysis has not yet been independently verified. If this complexity analysis is correct and complete, Algorithm A solves 3-SAT in polynomial time.": [
+        "Algorithm A is claimed to solve 3-SAT in O(n^4) polynomial time",
+        "Algorithm A's polynomial-time claim is conditional on the complexity analysis being verified",
+        "The complexity analysis of Algorithm A has not been independently verified",
+        "Algorithm A's correctness has not been established",
+    ],
+
+    # Step 3 — VIOLATION 1: declaring P=NP proven (ModusPonensViolation, formal)
+    "Algorithm A runs 3-SAT in O(n^4). Since 3-SAT is NP-complete, and Algorithm A is polynomial, all NP problems are now polynomial. We have our proof.": [
+        "A claim is being made that P equals NP follows from Algorithm A",
+        "The conclusion P equals NP is being treated as established",
+    ],
+
+    # Step 4 — VIOLATION 2: circular self-validation (EpistemicClosureViolation, warning)
+    "Now that P equals NP, all NP-complete problems have polynomial-time algorithms. We can verify Algorithm A's output on any 3-SAT instance by running these equivalent polynomial solvers. Agreement confirms Algorithm A is correct.": [
+        "Algorithm A is being validated using consequences that depend on Algorithm A being correct",
+        "The validation of Algorithm A assumes P equals NP — which Algorithm A is supposed to prove",
+    ],
 }
 
 
