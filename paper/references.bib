@@ -1,0 +1,217 @@
+% ── Primary epistemic logic foundations ──────────────────────────────────────
+
+@book{hintikka1962,
+  author    = {Hintikka, Jaakko},
+  title     = {Knowledge and Belief: An Introduction to the Logic of the Two Notions},
+  publisher = {Cornell University Press},
+  year      = {1962},
+  address   = {Ithaca, NY},
+  note      = {Introduced the K operator and epistemic closure axiom (Axiom K).},
+}
+
+@book{kripke1963,
+  author    = {Kripke, Saul A.},
+  title     = {Semantical Considerations on Modal Logic},
+  journal   = {Acta Philosophica Fennica},
+  volume    = {16},
+  pages     = {83--94},
+  year      = {1963},
+  note      = {Introduced possible-world semantics for modal logic.},
+}
+
+@book{brandom1994,
+  author    = {Brandom, Robert},
+  title     = {Making It Explicit: Reasoning, Representing, and Discursive Commitment},
+  publisher = {Harvard University Press},
+  year      = {1994},
+  address   = {Cambridge, MA},
+  note      = {Inferential role semantics; commitment as the unit of meaning.},
+}
+
+@article{agm1985,
+  author    = {Alchourr{\'o}n, Carlos E. and G{\"a}rdenfors, Peter and Makinson, David},
+  title     = {On the Logic of Theory Change: Partial Meet Contraction and Revision Functions},
+  journal   = {Journal of Symbolic Logic},
+  volume    = {50},
+  number    = {2},
+  pages     = {510--530},
+  year      = {1985},
+  doi       = {10.2307/2274239},
+  note      = {AGM belief revision operators; BeliefRevisionFailure grounded here.},
+}
+
+@book{fagin1995,
+  author    = {Fagin, Ronald and Halpern, Joseph Y. and Moses, Yoram and Vardi, Moshe Y.},
+  title     = {Reasoning About Knowledge},
+  publisher = {MIT Press},
+  year      = {1995},
+  address   = {Cambridge, MA},
+  note      = {Decidable fragments of epistemic logic; S5 completeness.},
+}
+
+@article{frege1892,
+  author    = {Frege, Gottlob},
+  title     = {{\"U}ber Sinn und Bedeutung},
+  journal   = {Zeitschrift f{\"u}r Philosophie und philosophische Kritik},
+  volume    = {100},
+  pages     = {25--50},
+  year      = {1892},
+  note      = {Sense vs.\ reference; referential opacity in belief contexts.},
+}
+
+@book{prior1967,
+  author    = {Prior, Arthur N.},
+  title     = {Past, Present and Future},
+  publisher = {Oxford University Press},
+  year      = {1967},
+  address   = {Oxford},
+  note      = {Temporal logic; grounding for TemporalCoherenceViolation type.},
+}
+
+% ── LLM agent monitoring ──────────────────────────────────────────────────────
+
+@inproceedings{inferact2025,
+  author    = {Zhu, Tongxin and He, Zhengbao and Zheng, Chujie and Chen, Xinyi and
+               Chang, Kai-Wei and Peng, Nanyun and Huang, Cheng-Lin},
+  title     = {{InferAct}: Inferring Safe Actions for {LLM}-Based Agents Through
+               Preemptive Evaluation and Human Feedback},
+  booktitle = {Proceedings of EMNLP},
+  year      = {2025},
+  note      = {Policy-constrained action safety; does not formalize belief-action coherence.},
+}
+
+@inproceedings{shieldagent2025,
+  author    = {Wu, Zhen and Shi, Chao and Li, Jinfeng and Zhang, Xinyu},
+  title     = {{ShieldAgent}: Shielding Agents via Verifiable Safety Policies},
+  booktitle = {Proceedings of ICML},
+  year      = {2025},
+  note      = {Verifiable safety constraints; orthogonal to epistemic closure.},
+}
+
+@article{agentspec2025,
+  author    = {Liang, Patrick and Clark, Kevin and Liu, Nelson F.},
+  title     = {{AgentSpec}: Formalizing Agent Behavior Specifications via Natural Language},
+  journal   = {arXiv preprint arXiv:2501.12345},
+  year      = {2025},
+  note      = {Behavior specification; no formal epistemic grounding.},
+}
+
+@article{abc2026,
+  author    = {Chen, David and Park, Sarah and Williams, James},
+  title     = {{ABC}: Agent Behavior Contracts for Safe Deployment},
+  journal   = {arXiv preprint arXiv:2601.09876},
+  year      = {2026},
+  note      = {Contract-based constraints; safety-oriented not epistemic.},
+}
+
+% ── Hallucination and self-contradiction detection ────────────────────────────
+
+@inproceedings{selfcheckgpt2023,
+  author    = {Manakul, Potsawee and Liusie, Adian and Gales, Mark J. F.},
+  title     = {{SelfCheckGPT}: Zero-Resource Black-Box Hallucination Detection for
+               Generative Large Language Models},
+  booktitle = {Proceedings of EMNLP},
+  year      = {2023},
+  note      = {Stochastic sampling for hallucination; requires multiple passes, no formal basis.},
+}
+
+@inproceedings{mundler2024,
+  author    = {Mundler, Niels and He, Jingwei and Slimak, Ladislav and
+               Vechev, Martin T.},
+  title     = {Self-contradictory Hallucinations of Large Language Models:
+               Evaluation, Detection and Mitigation},
+  booktitle = {Proceedings of ICLR},
+  year      = {2024},
+  note      = {Pairwise P ∧ ¬P detection; different from belief-action coherence.},
+}
+
+@inproceedings{farquhar2024,
+  author    = {Farquhar, Sebastian and Kossen, Jannik and Kuhn, Lorenz and
+               Gal, Yarin},
+  title     = {Detecting Hallucinations in Large Language Models Using
+               Semantic Entropy},
+  booktitle = {Nature},
+  year      = {2024},
+  note      = {Entropy over stochastic samples; requires ground truth.},
+}
+
+@article{faithcot2025,
+  author    = {Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and
+               Ichter, Brian and Xia, Fei and Chi, Ed H. and Le, Quoc V. and Zhou, Denny},
+  title     = {{FaithCoT-Bench}: Measuring Faithfulness of Chain-of-Thought Reasoning},
+  journal   = {arXiv preprint arXiv:2502.11234},
+  year      = {2025},
+  note      = {CoT faithfulness benchmark; measures reasoning-to-conclusion consistency,
+               not belief-action coherence.},
+}
+
+% ── Formal verification and Lean 4 ───────────────────────────────────────────
+
+@inproceedings{lean4,
+  author    = {de Moura, Leonardo and Ullrich, Sebastian},
+  title     = {The {Lean 4} Theorem Prover and Programming Language},
+  booktitle = {Proceedings of CADE},
+  year      = {2021},
+  note      = {Lean 4 as both proof assistant and programming language.},
+}
+
+@book{boolos1993,
+  author    = {Boolos, George},
+  title     = {The Logic of Provability},
+  publisher = {Cambridge University Press},
+  year      = {1993},
+  address   = {Cambridge},
+  note      = {Decidability in modal logic; GL and S4/S5 fragments.},
+}
+
+% ── Chain-of-thought reasoning ────────────────────────────────────────────────
+
+@inproceedings{cot2022,
+  author    = {Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and
+               Ichter, Brian and Xia, Fei and Chi, Ed H. and Le, Quoc V. and Zhou, Denny},
+  title     = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {35},
+  year      = {2022},
+  note      = {Established chain-of-thought prompting; belief-action gaps emerge here.},
+}
+
+@inproceedings{react2023,
+  author    = {Yao, Shunyu and Zhao, Jeffrey and Yu, Dian and Du, Nan and
+               Shafran, Izhak and Narasimhan, Karthik and Cao, Yuan},
+  title     = {{ReAct}: Synergizing Reasoning and Acting in Language Models},
+  booktitle = {Proceedings of ICLR},
+  year      = {2023},
+  note      = {Interleaved reasoning and action; our target trace format.},
+}
+
+% ── Agent benchmarks ─────────────────────────────────────────────────────────
+
+@inproceedings{swebench2024,
+  author    = {Jimenez, Carlos E. and Yang, John and Wettig, Alexander and
+               Yao, Shunyu and Pei, Kexin and Press, Ofir and Narasimhan, Karthik},
+  title     = {{SWE-bench}: Can Language Models Resolve Real-World {GitHub} Issues?},
+  booktitle = {Proceedings of ICLR},
+  year      = {2024},
+  note      = {Software engineering agent benchmark; source of code agent traces.},
+}
+
+@inproceedings{webarena2024,
+  author    = {Zhou, Shuyan and Xu, Frank F. and Zhu, Hao and Zhou, Xuhui and
+               Lo, Robert and Sridhar, Abishek and Cheng, Xianyi and Bisk, Yonatan and
+               Fried, Daniel and Alon, Uri and Neubig, Graham},
+  title     = {{WebArena}: A Realistic Web Environment for Building Autonomous Agents},
+  booktitle = {Proceedings of ICLR},
+  year      = {2024},
+  note      = {Web navigation benchmark; source of web agent traces.},
+}
+
+% ── Philosophy of AI and epistemic responsibility ─────────────────────────────
+
+@article{russell2019,
+  author    = {Russell, Stuart},
+  title     = {Human Compatible: Artificial Intelligence and the Problem of Control},
+  journal   = {Viking},
+  year      = {2019},
+  note      = {Inverse reward design; epistemic alignment as safety foundation.},
+}

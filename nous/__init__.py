@@ -138,16 +138,21 @@ def _compute_certainty(violation_dict: Optional[dict]) -> str:
     Tiers:
         formal  — Lean-decidable violation type with high confidence (≥0.95).
                   Has a soundness proof in theory/ClosureViolation.lean.
-        high    — Multi-model consensus (reserved for Phase D.3).
+                  See nous/decidable.py for the full decidability table.
+        high    — Multi-model consensus (Phase D.3): ≥2 of 3 providers agree.
         medium  — Single-model LLM detection (confidence ≥0.85).
         low     — Below the review threshold; flagged but uncertain.
         ok      — Clean step, no violation found at any confidence level.
     """
     if not violation_dict:
         return "ok"
+    from nous.decidable import FORMAL_VIOLATIONS
     vtype = violation_dict.get("type", "")
     confidence = float(violation_dict.get("confidence", 0.0))
-    if vtype in _FORMAL_VIOLATION_TYPES and confidence >= 0.95:
+    # "high" can be injected by cross_verify() in nous/verifier.py
+    if violation_dict.get("_certainty_override") == "high":
+        return "high"
+    if vtype in FORMAL_VIOLATIONS and confidence >= 0.95:
         return "formal"
     if confidence >= 0.85:
         return "medium"
