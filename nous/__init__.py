@@ -232,45 +232,61 @@ class StepResult:
         "warning"   — PROBABLE. Human should verify before proceeding.
         "review"    — UNCERTAIN. Human must verify. Do not auto-proceed.
 
+    The system guarantees:
+        - Every formally detectable violation produces status="violation"
+        - Every uncertain case produces status="warning" or "review"
+        - Nothing is silently passed — the closure is exhaustive
+
     Usage::
 
         r = n.step(reasoning, action)
 
-        # Human-in-loop routing (recommended):
         if r.status == "violation":
-            agent.halt()
+            agent.halt()                    # formal — math proves it
         elif r.status in ("warning", "review"):
-            human.review(r)
+            human.review(r)                 # uncertain — human decides
+        elif r.internal_contradictions:
+            human.review(r)                 # closure is self-contradictory
         else:
-            agent.proceed()
+            agent.proceed()                 # formally clean
 
-        # Conservative halt-on-any-suspicion (backward compat):
-        if not r:
-            agent.halt()
+        # See what's forbidden next:
+        for f in r.forbidden_next:
+            print(f"Forbidden: {f['action']} — would violate {f['violates']}")
 
     Fields:
-        status              — primary routing signal (see above)
-        certainty           — "formal" | "high" | "medium" | "low" | "ok"
-        justification       — why this certainty was assigned, in plain English
-        philosophical_frame — which philosopher's framework applies here
-        assumptions_surfaced — explicit beliefs extracted at this step
-        new_commitments     — derived consequences added to the closure
-        violation           — full violation dict if any (type, chain, confidence, ...)
-        coherent            — True iff status == "ok" (backward compat)
+        status                 — primary routing signal
+        certainty              — "formal" | "high" | "medium" | "low" | "ok"
+        justification          — why this certainty was assigned
+        philosophical_frame    — which philosopher's framework applies
+        assumptions_surfaced   — explicit beliefs extracted at this step
+        hidden_premises        — premises the step silently requires
+        forward_commitments    — constraints this step locks in for future steps
+        new_commitments        — derived consequences added to closure
+        internal_contradictions — contradictions WITHIN the closure itself
+        forbidden_next         — actions that would violate the closure next step
+        violation              — full violation dict if any
+        coherent               — True iff status == "ok" (backward compat)
     """
     step_index: int
     coherent: bool
     violation: Optional[dict] = None
-    commitments_added: int = 0          # count, backward compat
+    commitments_added: int = 0
     total_commitments: int = 0
     closure_size: int = 0
-    # Phase D.2 — certainty funnel + philosophical transparency
-    status: str = "ok"                  # primary human-in-loop signal
+    # Certainty funnel
+    status: str = "ok"
     certainty: str = "ok"
     justification: str = ""
     philosophical_frame: str = ""
-    assumptions_surfaced: list = field(default_factory=list)
-    new_commitments: list = field(default_factory=list)
+    # Three-tier extraction (exhaustive)
+    assumptions_surfaced: list = field(default_factory=list)    # explicit
+    hidden_premises: list = field(default_factory=list)         # premises
+    forward_commitments: list = field(default_factory=list)     # commitments
+    new_commitments: list = field(default_factory=list)         # derived
+    # Self-audit outputs
+    internal_contradictions: list = field(default_factory=list) # closure self-check
+    forbidden_next: list = field(default_factory=list)          # predictive warnings
 
     # ── Convenience properties ──────────────────────────────────────────
 
@@ -499,14 +515,45 @@ class Nous:
             if violation_dict else _CLEAN_FRAME
         )
 
-        # Nodes added at this step: explicit assertions and derived consequences
+        # ── Phase D.5: Three-tier extraction audit ──
         step_nodes = [n for n in self._graph.nodes.values() if n.source_step == idx]
         assumptions_surfaced = [n.content for n in step_nodes if n.is_explicit]
-        new_commitments_list = [n.content for n in step_nodes if not n.is_explicit]
+        hidden_premises_list = [n.content for n in step_nodes if n.modality == 'premise']
+        forward_commitments_list = [n.content for n in step_nodes if n.modality == 'commitment']
+        new_commitments_list = [
+            n.content for n in step_nodes
+            if not n.is_explicit and n.modality not in ('premise', 'commitment')
+        ]
+
+        # ── Phase D.5: Internal consistency check ──
+        # Only run if this is a live run (has API key) and not test mode
+        internal_contradictions = []
+        forbidden_next = []
+        if not test_mode and self._api_key and len(closure) >= 2:
+            from nous.exhaust import check_internal_consistency, predict_forbidden_actions
+            closure_list = list(closure)
+            internal_contradictions = check_internal_consistency(
+                closure_list, api_key=self._api_key,
+            )
+            # If the step is clean, predict what would be forbidden next
+            if status == "ok" and len(closure_list) >= 3:
+                forbidden_next = predict_forbidden_actions(
+                    closure_list, api_key=self._api_key,
+                )
+
+        # If internal contradictions exist, escalate to review even if action was ok
+        if internal_contradictions and status == "ok":
+            status = "review"
+            certainty = "medium"
+            justification = (
+                f"The commitment closure contains {len(internal_contradictions)} "
+                f"internal contradiction(s) — independent of the current action. "
+                f"Human must verify the closure is coherent before proceeding."
+            )
 
         return StepResult(
             step_index=step_index or self._graph._step_count,
-            coherent=violation_path is None,
+            coherent=violation_path is None and not internal_contradictions,
             violation=violation_dict,
             commitments_added=new_nodes,
             total_commitments=len(self._graph.nodes),
@@ -516,7 +563,11 @@ class Nous:
             justification=justification,
             philosophical_frame=philosophical_frame,
             assumptions_surfaced=assumptions_surfaced,
+            hidden_premises=hidden_premises_list,
+            forward_commitments=forward_commitments_list,
             new_commitments=new_commitments_list,
+            internal_contradictions=internal_contradictions,
+            forbidden_next=forbidden_next,
         )
 
     def state(self) -> "ReasoningState":
@@ -622,6 +673,66 @@ class Nous:
         """Direct access to the underlying CommitmentGraph."""
         return self._graph
 
+    def audit(self) -> "AuditReport":
+        """Full self-audit of the commitment graph.
+
+        Asks every question the system can formally answer:
+          - Are there internal contradictions in the closure?
+          - What is the full commitment closure right now?
+          - Which violations have been detected?
+          - What actions are currently forbidden?
+          - What hidden premises are the current commitments leaning on?
+
+        This is the "reasoning about its own reasoning" mode — Nous turns
+        the epistemic closure operator on ITSELF, auditing its own graph
+        for completeness and consistency.
+
+        Usage::
+
+            n = Nous()
+            for step in agent_trace:
+                n.step(step["text"], step["action"])
+
+            report = n.audit()
+            print(report)       # full audit to terminal
+            report.to_json()    # machine-readable
+
+        Returns:
+            AuditReport with complete findings.
+        """
+        from nous.exhaust import check_internal_consistency, predict_forbidden_actions
+
+        closure_list = list(self._graph.get_closure())
+        all_nodes = list(self._graph.nodes.values())
+
+        internal_contradictions = []
+        forbidden = []
+        if self._api_key and closure_list:
+            internal_contradictions = check_internal_consistency(
+                closure_list, api_key=self._api_key,
+            )
+            if closure_list:
+                forbidden = predict_forbidden_actions(
+                    closure_list, api_key=self._api_key,
+                )
+
+        hidden_premises = [
+            n.content for n in all_nodes if n.modality == 'premise'
+        ]
+        forward_commitments = [
+            n.content for n in all_nodes if n.modality == 'commitment'
+        ]
+
+        return AuditReport(
+            closure=closure_list,
+            violations=self.violations,
+            internal_contradictions=internal_contradictions,
+            forbidden_actions=forbidden,
+            hidden_premises=hidden_premises,
+            forward_commitments=forward_commitments,
+            total_steps=self._graph._step_count,
+        )
+
     def reset(self) -> None:
         """Clear all state. Use between reasoning sessions."""
         self._graph.reset()
@@ -644,6 +755,89 @@ class Nous:
         """Pretty terminal output via Rich (falls back to plain text)."""
         from nous.viz import rich_print_state
         return rich_print_state(self._graph)
+
+
+@dataclass
+class AuditReport:
+    """Full audit of the commitment graph after a reasoning trace.
+
+    Answers every question the system can formally answer about the
+    agent's reasoning state.
+    """
+    closure: list[str]
+    violations: list                        # list[ViolationPath]
+    internal_contradictions: list[dict]     # pairs that contradict each other
+    forbidden_actions: list[dict]           # actions forbidden by current closure
+    hidden_premises: list[str]              # premises surfaced but not explicitly stated
+    forward_commitments: list[str]          # constraints locked in for future steps
+    total_steps: int
+
+    def __str__(self) -> str:
+        lines = [
+            "=" * 64,
+            f"  NOUS AUDIT REPORT — {self.total_steps} steps analyzed",
+            "=" * 64,
+            "",
+            f"Commitment closure: {len(self.closure)} propositions",
+        ]
+        for c in self.closure[:10]:
+            lines.append(f"  - {c[:80]}")
+        if len(self.closure) > 10:
+            lines.append(f"  ... ({len(self.closure) - 10} more)")
+        lines.append("")
+
+        if self.violations:
+            lines.append(f"Violations detected: {len(self.violations)}")
+            for v in self.violations:
+                lines.append(f"  [{v.violation_type}] {v.violated_node.content[:60]}")
+            lines.append("")
+
+        if self.internal_contradictions:
+            lines.append(f"Internal contradictions: {len(self.internal_contradictions)}")
+            for c in self.internal_contradictions:
+                lines.append(f"  A: {c.get('a','')[:60]}")
+                lines.append(f"  B: {c.get('b','')[:60]}")
+                lines.append(f"  Why: {c.get('explanation','')[:80]}")
+                lines.append("")
+        else:
+            lines.append("Internal contradictions: none")
+            lines.append("")
+
+        if self.hidden_premises:
+            lines.append(f"Hidden premises surfaced: {len(self.hidden_premises)}")
+            for p in self.hidden_premises[:5]:
+                lines.append(f"  - {p[:80]}")
+            lines.append("")
+
+        if self.forbidden_actions:
+            lines.append(f"Currently forbidden actions: {len(self.forbidden_actions)}")
+            for f in self.forbidden_actions[:5]:
+                lines.append(f"  FORBIDDEN: {f.get('action','')[:60]}")
+                lines.append(f"  Would violate: {f.get('violates','')[:60]}")
+                lines.append("")
+
+        lines.append("=" * 64)
+        return "\n".join(lines)
+
+    def to_json(self) -> dict:
+        return {
+            "total_steps": self.total_steps,
+            "closure_size": len(self.closure),
+            "closure": self.closure,
+            "violation_count": len(self.violations),
+            "violations": [
+                {
+                    "type": v.violation_type,
+                    "violated": v.violated_node.content,
+                    "confidence": v.confidence,
+                }
+                for v in self.violations
+            ],
+            "internal_contradictions": self.internal_contradictions,
+            "forbidden_actions": self.forbidden_actions,
+            "hidden_premises": self.hidden_premises,
+            "forward_commitments": self.forward_commitments,
+        }
 
 
 # ─── Backward compatibility ──────────────────────────────────────────

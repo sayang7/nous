@@ -85,10 +85,14 @@ def run_nous_on_task(task: dict, test_mode: bool, api_key: str | None) -> dict:
     start = time.time()
 
     try:
-        result = detect_violations(trace, test_mode=test_mode, api_key=api_key)
-        predicted = result.get("violation_found", False)
-        vtype = result.get("violation_type")
-        conf = result.get("confidence", 0.5)
+        violations = detect_violations(trace, test_mode=test_mode, api_key=api_key)
+        if violations:
+            best = max(violations, key=lambda v: v.confidence)
+            predicted = best.confidence >= 0.85
+            vtype = best.violation_type if predicted else None
+            conf = best.confidence
+        else:
+            predicted, vtype, conf = False, None, 0.0
     except Exception as e:
         predicted = False
         vtype = None

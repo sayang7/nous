@@ -252,24 +252,29 @@ class CommitmentGraph:
         return None
 
     def get_closure(self) -> set[str]:
-        """Compute commitment closure via BFS.
+        """Compute commitment closure via convergent BFS.
 
-        This is PURE ALGORITHM — no LLM, no API, no neural network.
-        Starting from all explicit assertions, follow entailment edges
-        to find everything the agent is committed to.
+        PURE ALGORITHM — no LLM, no API, no neural network.
 
-        Complexity: O(V + E) where V = nodes, E = edges.
+        Starts from ALL nodes (explicit assertions, surfaced premises, and
+        forward commitments) and follows entailment edges until convergence
+        — no new nodes are reachable.
+
+        The key difference from one-pass BFS: by including premises and
+        forward commitments as seeds, the closure is COMPLETE. If step 3
+        surfaces "f must be continuous" as a premise, and step 5 adds
+        "f is discontinuous", the contradiction is reachable in the closure.
+
+        Complexity: O(V + E) per iteration, O(k(V+E)) total where k = depth
+        of the longest entailment chain (typically small, converges fast).
         """
-        visited: set[str] = set()
-        queue: list[str] = []
+        # Seed from ALL nodes — explicit, premises, and forward commitments
+        # This is the key architectural difference: premises and commitments
+        # are first-class members of the closure, not metadata.
+        visited: set[str] = set(self.nodes.keys())
+        queue: list[str] = list(visited)
 
-        # Start from all explicit assertions
-        for content, node in self.nodes.items():
-            if node.is_explicit:
-                visited.add(content)
-                queue.append(content)
-
-        # BFS
+        # BFS to convergence
         while queue:
             current = queue.pop(0)
             for neighbor in self.adjacency.get(current, []):
@@ -307,27 +312,51 @@ class CommitmentGraph:
 
     def _extract_beliefs(
         self, reasoning: str, step_index: int, *, test_mode: bool,
+        exhaustive: bool = True,
     ) -> list[CommitmentNode]:
-        """Extract beliefs from reasoning text. This uses NLP (LLM or fixtures)."""
+        """Extract beliefs from reasoning text.
+
+        When exhaustive=True (default), uses the three-tier extractor to surface:
+          - explicit assertions (is_explicit=True)
+          - hidden premises the step requires (is_explicit=False, modality='premise')
+          - forward commitments the step locks in (is_explicit=False, modality='commitment')
+
+        When exhaustive=False, falls back to the single-tier extractor (backward compat).
+        """
+        if exhaustive and not test_mode:
+            from nous.exhaust import extract_exhaustive
+            result = extract_exhaustive(
+                reasoning, step_index, api_key=self._api_key, test_mode=test_mode,
+            )
+            nodes = []
+            for belief in result.explicit:
+                nodes.append(CommitmentNode(
+                    content=belief, source_step=step_index,
+                    is_explicit=True, modality=_detect_modality(belief),
+                ))
+            for belief in result.premises:
+                nodes.append(CommitmentNode(
+                    content=belief, source_step=step_index,
+                    is_explicit=False, modality='premise',
+                ))
+            for belief in result.commitments:
+                nodes.append(CommitmentNode(
+                    content=belief, source_step=step_index,
+                    is_explicit=False, modality='commitment',
+                ))
+            return nodes
+
+        # Fallback: single-tier extraction
         from nous.extractor import extract_beliefs
-
-        beliefs = extract_beliefs(
-            reasoning,
-            test_mode=test_mode,
-            api_key=self._api_key,
-        )
-
+        beliefs = extract_beliefs(reasoning, test_mode=test_mode, api_key=self._api_key)
         nodes = []
         for belief in beliefs:
             modality = _detect_modality(belief)
             node = CommitmentNode(
-                content=belief,
-                source_step=step_index,
-                is_explicit=True,
-                modality=modality,
+                content=belief, source_step=step_index,
+                is_explicit=True, modality=modality,
             )
             nodes.append(node)
-
         return nodes
 
     def _compute_edges(

@@ -48,16 +48,16 @@ from nous.detector import detect_violations
 def run_nous(trace: list[dict], test_mode: bool, api_key: str | None,
              confidence_threshold: float = 0.85) -> dict:
     try:
-        result = detect_violations(trace, test_mode=test_mode, api_key=api_key)
-        violation = result.get("violation_found", False)
-        conf = result.get("confidence", 0.5)
-        # Apply confidence threshold
-        if violation and conf < confidence_threshold:
-            violation = False
+        violations = detect_violations(trace, test_mode=test_mode, api_key=api_key)
+        if not violations:
+            return {"violation": False, "violation_type": None, "confidence": 0.0}
+        # Pick highest-confidence violation
+        best = max(violations, key=lambda v: v.confidence)
+        detected = best.confidence >= confidence_threshold
         return {
-            "violation": violation,
-            "violation_type": result.get("violation_type"),
-            "confidence": conf,
+            "violation": detected,
+            "violation_type": best.violation_type if detected else None,
+            "confidence": best.confidence,
         }
     except Exception as e:
         return {"violation": False, "violation_type": None, "confidence": 0.0, "error": str(e)}
