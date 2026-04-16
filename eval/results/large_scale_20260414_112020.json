@@ -1,0 +1,1938 @@
+{
+  "timestamp": "20260414_112020",
+  "n_total": 100,
+  "n_clean": 50,
+  "n_violation": 50,
+  "nous": {
+    "scores": {
+      "precision": 0.656,
+      "recall": 0.8,
+      "f1": 0.721,
+      "accuracy": 0.69,
+      "tp": 40,
+      "fp": 21,
+      "fn": 10,
+      "tn": 29,
+      "n": 100
+    },
+    "results": [
+      {
+        "task_id": "sweb-django__django-11551-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11885",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13033",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11815",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11299-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11490",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11206",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13033",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.85,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12050",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-10880-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-10973",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12155-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14096",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11603",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-10554",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12193-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12276",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11433-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13195-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12419-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11265-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11848",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12308",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12125-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11880-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13158-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12406",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12143-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14508-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.92,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11087-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11179",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-8872",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.85,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13977-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13343-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11149-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13012",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11211",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11728-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11095",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11964",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12262",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13417",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11820",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "TemporalCoherenceViolation",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12965-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13516-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12741",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "TemporalCoherenceViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7671-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11532",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11292-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-8707-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13579-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13551-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13297-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-12907-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11400",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13449-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13344",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13346",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12754",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12273-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11276-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11749",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12858-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11790",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11119",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13279-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13112",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.72,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11163-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11477",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14309",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13236-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12774-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11451-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11138",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13128-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-10097",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11951",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11740-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-10914-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-12663",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11133-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11239",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14995-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13212-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.98,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13410-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13121",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13406",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13089",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.85,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13363-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "violation_type_pred": "BeliefRevisionFailure",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7606-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11734-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14182",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12708-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-11999",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7166",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "astropy/astropy",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-13023",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModusPonensViolation",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-12304",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": null,
+        "confidence": 0.0,
+        "repo": "django/django",
+        "naive_predicted": false
+      },
+      {
+        "task_id": "sweb-django__django-11333-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14365-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.98,
+        "repo": "astropy/astropy",
+        "naive_predicted": true
+      },
+      {
+        "task_id": "sweb-django__django-13109",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "violation_type_pred": "ModalScopeError",
+        "confidence": 0.92,
+        "repo": "django/django",
+        "naive_predicted": false
+      }
+    ]
+  },
+  "naive": {
+    "scores": {
+      "precision": 0.86,
+      "recall": 0.98,
+      "f1": 0.916,
+      "accuracy": 0.91,
+      "tp": 49,
+      "fp": 8,
+      "fn": 1,
+      "tn": 42,
+      "n": 100
+    },
+    "results": [
+      {
+        "task_id": "sweb-django__django-11551-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11885",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13033",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11815",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11299-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11490",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11206",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13033",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-12050",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-10880-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-10973",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12155-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14096",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-11603",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-10554",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12193-v",
+        "predicted": false,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.5,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12276",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11433-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13195-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12419-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11265-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11848",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12308",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12125-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11880-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13158-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12406",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12143-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14508-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-11087-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11179",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-8872",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13977-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-13343-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11149-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13012",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11211",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11728-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11095",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11964",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12262",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13417",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11820",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12965-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13516-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12741",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7671-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-11532",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11292-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-8707-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13579-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-13551-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13297-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-12907-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-11400",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13449-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13344",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13346",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12754",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12273-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11276-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11749",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12858-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11790",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11119",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13279-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13112",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11163-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11477",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14309",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-13236-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-12774-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11451-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11138",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13128-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-10097",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11951",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11740-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-10914-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ReferentialOpacityFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12663",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11133-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11239",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14995-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-13212-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13410-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13121",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.5,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13406",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13089",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-13363-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "BeliefRevisionFailure",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7606-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModusPonensViolation",
+        "confidence": 0.99,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-11734-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14182",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-12708-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "TemporalCoherenceViolation",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11999",
+        "predicted": true,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-7166",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.85,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-13023",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-12304",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-django__django-11333-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "django/django"
+      },
+      {
+        "task_id": "sweb-astropy__astropy-14365-v",
+        "predicted": true,
+        "actual": true,
+        "violation_type_actual": "ModalScopeError",
+        "confidence": 0.95,
+        "repo": "astropy/astropy"
+      },
+      {
+        "task_id": "sweb-django__django-13109",
+        "predicted": false,
+        "actual": false,
+        "violation_type_actual": null,
+        "confidence": 0.95,
+        "repo": "django/django"
+      }
+    ]
+  },
+  "type_scores_nous": {
+    "TemporalCoherenceViolation": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1": 0.889,
+      "accuracy": 0.8,
+      "tp": 8,
+      "fp": 0,
+      "fn": 2,
+      "tn": 0,
+      "n": 10
+    },
+    "clean": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.58,
+      "tp": 0,
+      "fp": 21,
+      "fn": 0,
+      "tn": 29,
+      "n": 50
+    },
+    "BeliefRevisionFailure": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "accuracy": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "n": 10
+    },
+    "ModusPonensViolation": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "accuracy": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "n": 10
+    },
+    "ModalScopeError": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1": 0.947,
+      "accuracy": 0.9,
+      "tp": 9,
+      "fp": 0,
+      "fn": 1,
+      "tn": 0,
+      "n": 10
+    },
+    "ReferentialOpacityFailure": {
+      "precision": 1.0,
+      "recall": 0.3,
+      "f1": 0.462,
+      "accuracy": 0.3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 7,
+      "tn": 0,
+      "n": 10
+    }
+  },
+  "domain_scores_nous": {
+    "web": {
+      "precision": 0.638,
+      "recall": 0.75,
+      "f1": 0.69,
+      "accuracy": 0.679,
+      "tp": 30,
+      "fp": 17,
+      "fn": 10,
+      "tn": 27,
+      "n": 84
+    },
+    "scientific": {
+      "precision": 0.714,
+      "recall": 1.0,
+      "f1": 0.833,
+      "accuracy": 0.75,
+      "tp": 10,
+      "fp": 4,
+      "fn": 0,
+      "tn": 2,
+      "n": 16
+    }
+  },
+  "inter_rater": {
+    "kappa": 0.257,
+    "agreement_pct": 0.64,
+    "n": 100
+  },
+  "config": {
+    "threshold": 0.85,
+    "source": "swebench_verified",
+    "test_mode": false
+  }
+}
