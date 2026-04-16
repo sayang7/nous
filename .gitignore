@@ -26,3 +26,14 @@ frontend/dist/
 frontend/tsconfig.*.tsbuildinfo
 # Streamlit
 .streamlit/
+# Vendored JS libs (not source)
+lib/
+# Intermediate/duplicate eval runs (keep only canonical)
+eval/results/large_scale_checkpoint.json
+eval/results/run_20260319_*.json
+eval/results/run_20260321_*.json
+eval/results/run_20260322_*.json
+eval/results/run_20260323_*.json
+eval/results/run_20260324_*.json
+eval/results/large_scale_20260413_*
+eval/results/large_scale_20260414_111941*
