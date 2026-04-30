@@ -24,7 +24,6 @@ from pydantic import BaseModel
 
 from nous import Nous
 from nous.providers import get_provider
-from nous.schools import analyze_schools
 from nous.splitter import split_reasoning
 
 app = FastAPI(title="Nous", version="0.5.0")
@@ -109,11 +108,6 @@ class ReasonRequest(BaseModel):
     provider: str = "anthropic"
     api_key: Optional[str] = None
     test_mode: bool = False
-
-class SchoolsRequest(BaseModel):
-    steps: list[dict]
-    violations: list[dict] = []
-    problem: str = ""
 
 class URLRequest(BaseModel):
     url: str
@@ -316,17 +310,6 @@ async def stream_reason(req: ReasonRequest):
             "X-Accel-Buffering": "no",  # disable nginx buffering
         },
     )
-
-
-@app.post("/api/schools")
-def schools(req: SchoolsRequest):
-    """Analyze reasoning from multiple philosophical perspectives."""
-    result = analyze_schools(
-        steps=req.steps,
-        violations=req.violations,
-        problem=req.problem,
-    )
-    return result
 
 
 @app.post("/api/import/url")

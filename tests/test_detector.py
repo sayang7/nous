@@ -16,7 +16,6 @@ from nous.detector import (
     ClosureViolationReport,
     VIOLATION_TYPES,
 )
-from nous.scorer import compute_metrics
 
 
 # ─── Extractor Tests ─────────────────────────────────────────────
@@ -175,42 +174,6 @@ class TestClosureScore:
         assert closure_score(violations, 4) == 0.25
 
 
-# ─── Scorer Tests ─────────────────────────────────────────────────
-
-class TestScorer:
-    def test_metrics_from_violations(self):
-        violations = [
-            ClosureViolationReport(
-                step_index=1, antecedent="a", entailed="b",
-                action="c", violation_type="ModusPonensViolation",
-                confidence=0.9,
-            ),
-            ClosureViolationReport(
-                step_index=2, antecedent="d", entailed="e",
-                action="f", violation_type="BeliefRevisionFailure",
-                confidence=0.85,
-            ),
-        ]
-        metrics = compute_metrics(violations, 5)
-        assert metrics.closure_score == pytest.approx(0.4)
-        assert metrics.violation_count == 2
-        assert metrics.steps_analyzed == 5
-        assert "ModusPonensViolation" in metrics.violation_breakdown
-        assert "BeliefRevisionFailure" in metrics.violation_breakdown
-        assert metrics.most_common_violation in VIOLATION_TYPES
-
-    def test_no_violations_metrics(self):
-        metrics = compute_metrics([], 3)
-        assert metrics.closure_score == 0.0
-        assert metrics.violation_count == 0
-        assert metrics.most_common_violation == "None"
-
-    def test_zero_steps_metrics(self):
-        metrics = compute_metrics([], 0)
-        assert metrics.steps_analyzed == 0
-        assert metrics.closure_score == 0.0
-
-
 # ─── Batch Equivalence Tests ─────────────────────────────────────
 
 class TestBatchExtractor:
@@ -277,24 +240,3 @@ class TestBatchDetector:
         violations = detect_violations_batch(trace, test_mode=True)
         assert len(violations) >= 1
         assert any(v.violation_type == "BeliefRevisionFailure" for v in violations)
-
-
-# ─── Baseline Module Tests ──────────────────────────────────────
-
-class TestBaseline:
-    def test_baseline_module_imports(self):
-        from nous.baseline import baseline_detect, BaselineResult, BASELINE_PROMPT
-        assert callable(baseline_detect)
-        assert "{trace_text}" in BASELINE_PROMPT
-
-    def test_baseline_requires_api_key(self):
-        import os
-        from nous.baseline import baseline_detect
-
-        old_key = os.environ.pop("ANTHROPIC_API_KEY", None)
-        try:
-            with pytest.raises(RuntimeError, match="API key required"):
-                baseline_detect([{"text": "test", "action": "test"}])
-        finally:
-            if old_key:
-                os.environ["ANTHROPIC_API_KEY"] = old_key

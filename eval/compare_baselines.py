@@ -21,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nous.detector import detect_violations
-from nous.scorer import compute_metrics
+
 
 
 # ── Naive single-prompt baseline ─────────────────────────────────────────────
